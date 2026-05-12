@@ -1,0 +1,115 @@
+{
+  "entities": {
+    "Blog": {
+      "title": "Blog Post",
+      "description": "A blog post article",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "date": { "type": "string" },
+        "author": { "type": "string" },
+        "tag": { "type": "string" },
+        "image": { "type": "string" },
+        "excerpt": { "type": "string" },
+        "content": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "date", "author", "tag", "image", "excerpt", "content"]
+    },
+    "Setting": {
+      "title": "App Setting",
+      "description": "Global application settings",
+      "type": "object",
+      "properties": {
+        "phone": { "type": "string" },
+        "email": { "type": "string" },
+        "tagline": { "type": "string" },
+        "whatsapp": { "type": "string" }
+      }
+    },
+    "Contact": {
+      "title": "Contact Query",
+      "description": "A contact us form submission",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "subject": { "type": "string" },
+        "message": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["new", "read", "replied"] }
+      },
+      "required": ["name", "email", "message", "createdAt"]
+    },
+    "Application": {
+      "title": "Course Application",
+      "description": "An online course application form submission",
+      "type": "object",
+      "properties": {
+        "fullName": { "type": "string" },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "course": { "type": "string" },
+        "education": { "type": "string" },
+        "purpose": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["pending", "contacted", "enrolled", "rejected"] }
+      },
+      "required": ["fullName", "email", "course", "createdAt"]
+    },
+    "MockTestLead": {
+      "title": "Mock Test Lead",
+      "description": "Details of student who finished a mock test",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "testType": { "type": "string", "enum": ["IELTS", "PTE", "German"] },
+        "score": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["new", "contacted"] }
+      },
+      "required": ["name", "email", "phone", "testType", "createdAt"]
+    },
+    "GalleryItem": {
+      "title": "Gallery Item",
+      "description": "An image for the Life at Language World gallery",
+      "type": "object",
+      "properties": {
+        "url": { "type": "string" },
+        "title": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["url", "title", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/blogs/{blogId}": {
+      "schema": "Blog",
+      "description": "Collection of blog posts"
+    },
+    "/settings/global": {
+      "schema": "Setting",
+      "description": "Global configuration document"
+    },
+    "/contacts/{contactId}": {
+      "schema": "Contact",
+      "description": "Collection of contact form submissions"
+    },
+    "/applications/{applicationId}": {
+      "schema": "Application",
+      "description": "Collection of course applications"
+    },
+    "/leads/{leadId}": {
+      "schema": "MockTestLead",
+      "description": "Collection of leads from mock tests"
+    },
+    "/gallery/{itemId}": {
+      "schema": "GalleryItem",
+      "description": "Collection of photos for the gallery"
+    }
+  }
+}

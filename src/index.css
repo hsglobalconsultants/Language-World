@@ -1,0 +1,93 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700;800&display=swap');
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Poppins", sans-serif;
+  
+  --color-primary: #7BC043;
+  --color-primary-dark: #69a338;
+  --color-accent: #4B3FBF;
+  --color-accent-light: #6a5fe3;
+  --color-soft-gray: #F8F9FA;
+}
+
+@layer base {
+  body {
+    @apply font-sans text-gray-900 bg-white antialiased;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display tracking-tight;
+  }
+}
+
+.glass-card {
+  @apply bg-white/80 backdrop-blur-md border border-white/20 shadow-sm;
+}
+
+.btn-primary {
+  @apply px-6 py-3 bg-primary text-white font-semibold rounded-full hover:bg-primary-dark transition-all duration-300 shadow-md hover:shadow-lg flex items-center justify-center gap-2;
+}
+
+.btn-accent {
+  @apply px-6 py-3 bg-accent text-white font-semibold rounded-full hover:bg-accent-light transition-all duration-300 shadow-md hover:shadow-lg flex items-center justify-center gap-2;
+}
+
+.btn-outline {
+  @apply px-6 py-3 border-2 border-primary text-primary font-semibold rounded-full hover:bg-primary hover:text-white transition-all duration-300 flex items-center justify-center gap-2;
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+@keyframes shimmer {
+  100% { transform: translateX(100%); }
+}
+
+.animate-shimmer {
+  animation: shimmer 1s infinite;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.blog-content-wrapper {
+  @apply text-lg text-gray-600 leading-relaxed;
+}
+
+.blog-content-wrapper h2 {
+  @apply text-3xl font-extrabold text-accent mt-12 mb-6;
+}
+
+.blog-content-wrapper h3 {
+  @apply text-2xl font-bold text-accent mt-8 mb-4;
+}
+
+.blog-content-wrapper p {
+  @apply mb-6;
+}
+
+.blog-content-wrapper ul, .blog-content-wrapper ol {
+  @apply mb-6 pl-6;
+}
+
+.blog-content-wrapper li {
+  @apply mb-2 list-disc;
+}
+
+/* 3D Transform Utilities for Flashcards */
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+}

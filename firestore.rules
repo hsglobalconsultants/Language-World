@@ -1,0 +1,111 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && 
+        request.auth.token.email.lower() == "hsglobalconsultants@gmail.com";
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Blogs Collection
+    match /blogs/{blogId} {
+      function isValidBlog(data) {
+        return data.title is string && data.title.size() <= 200 &&
+               data.date is string &&
+               data.author is string &&
+               data.tag is string &&
+               data.image is string &&
+               data.excerpt is string &&
+               data.content is string;
+      }
+
+      allow read: if true; // Publicly readable
+      
+      allow create: if isAdmin() && 
+                    isValidBlog(request.resource.data) &&
+                    request.resource.data.keys().hasAll(['title', 'date', 'author', 'tag', 'image', 'excerpt', 'content', 'createdAt', 'updatedAt']) &&
+                    request.resource.data.createdAt == request.time &&
+                    request.resource.data.updatedAt == request.time;
+
+      allow update: if isAdmin() && 
+                    isValidBlog(request.resource.data) &&
+                    request.resource.data.updatedAt == request.time;
+
+      allow delete: if isAdmin();
+    }
+
+    // Settings Collection
+    match /settings/global {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Contacts Collection
+    match /contacts/{contactId} {
+      function isValidContact(data) {
+        return data.name is string && data.name.size() <= 100 &&
+               data.email is string && data.email.size() <= 100 &&
+               data.message is string && data.message.size() <= 5000;
+      }
+      allow create: if isValidContact(request.resource.data) && 
+                    request.resource.data.createdAt == request.time;
+      allow read, update, delete: if isAdmin();
+    }
+
+    // Applications Collection
+    match /applications/{applicationId} {
+      function isValidApplication(data) {
+        return data.fullName is string && data.fullName.size() <= 100 &&
+               data.email is string && data.email.size() <= 100 &&
+               data.phone is string && data.phone.size() <= 30 &&
+               data.course is string &&
+               data.status == "pending" &&
+               (data.message == "" || (data.message is string && data.message.size() <= 2000));
+      }
+      allow create: if isValidApplication(request.resource.data) && 
+                    request.resource.data.createdAt == request.time;
+      allow read, update, delete: if isAdmin();
+    }
+
+    // Leads Collection
+    match /leads/{leadId} {
+      function isValidLead(data) {
+        return data.name is string && data.name.size() <= 100 &&
+               data.email is string && data.email.size() <= 100 &&
+               data.phone is string && data.phone.size() <= 30 &&
+               data.testType is string &&
+               data.status is string;
+      }
+      allow create: if isValidLead(request.resource.data) && 
+                    request.resource.data.createdAt == request.time;
+      allow read, update, delete: if isAdmin();
+    }
+
+    // Gallery Collection
+    match /gallery/{itemId} {
+      function isValidGalleryItem(data) {
+        return data.url is string && data.url.size() <= 2000000 &&
+               data.title is string && data.title.size() <= 200;
+      }
+      allow read: if true;
+      allow create: if isAdmin() && 
+                    isValidGalleryItem(request.resource.data) &&
+                    request.resource.data.createdAt == request.time;
+      allow update: if isAdmin() && isValidGalleryItem(request.resource.data);
+      allow delete: if isAdmin();
+    }
+  }
+}
