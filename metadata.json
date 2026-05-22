@@ -2,11 +2,13 @@
   "name": "Language World",
   "description": "Premium educational institute specializing in German language, IELTS, PTE, and Business Communication coaching.",
   "requestFramePermissions": [
-    "geolocation"
+    "geolocation",
+    "microphone"
   ],
   "majorCapabilities": [
     "SEO Optimized",
     "Responsive Design",
-    "Educational Portal"
+    "Educational Portal",
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
   ]
 }

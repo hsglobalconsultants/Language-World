@@ -92,10 +92,13 @@ export default function BlogPage() {
                 >
                   <div className="relative h-64 overflow-hidden">
                     <img 
-                      src={blog.image} 
+                      src={blog.image || "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&q=80&w=800"} 
                       alt={blog.title} 
                       className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                       referrerPolicy="no-referrer"
+                      onError={(e) => {
+                        e.currentTarget.src = "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&q=80&w=800";
+                      }}
                     />
                     <div className="absolute top-6 left-6 px-4 py-1 bg-primary text-white text-xs font-bold rounded-full">
                       {blog.tag}

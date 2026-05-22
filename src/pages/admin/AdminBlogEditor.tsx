@@ -9,11 +9,13 @@ import {
   Calendar,
   User,
   Loader2,
-  Eye
+  Eye,
+  Sparkles
 } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { blogService } from "../../services/blogService";
+import { generateMetaDescription, generateKeywords } from "../../utils/seoGenerator";
 
 export default function AdminBlogEditor() {
   const { id } = useParams();
@@ -31,7 +33,9 @@ export default function AdminBlogEditor() {
     tag: "IELTS",
     image: "",
     excerpt: "",
-    content: ""
+    content: "",
+    metaDescription: "",
+    keywords: ""
   });
 
   useEffect(() => {
@@ -52,7 +56,9 @@ export default function AdminBlogEditor() {
             tag: blog.tag,
             image: blog.image,
             excerpt: blog.excerpt,
-            content: blog.content
+            content: blog.content,
+            metaDescription: blog.metaDescription || "",
+            keywords: blog.keywords || ""
           });
         }
         setLoading(false);
@@ -214,6 +220,64 @@ export default function AdminBlogEditor() {
                   className="w-full bg-soft-gray border-none rounded-2xl px-6 py-4 focus:ring-2 focus:ring-primary outline-none font-medium text-gray-600 resize-none"
                   placeholder="Short one-sentence summary for the preview card..."
                 />
+              </div>
+
+              {/* Dynamic Robust SEO Inputs */}
+              <div className="border-t border-gray-100 pt-8 space-y-6">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div>
+                    <h3 className="text-sm font-black text-accent uppercase tracking-wider flex items-center gap-2">
+                      <Sparkles className="text-primary animate-pulse w-4 h-4" /> SEO Optimization Core
+                    </h3>
+                    <p className="text-[11px] text-gray-400 font-bold">Auto-generate or handcraft meta descriptions and keywords based on content.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const computedDesc = generateMetaDescription(formData.title, formData.content, formData.excerpt);
+                      const computedKeywords = generateKeywords(formData.title, formData.content, formData.tag);
+                      setFormData(prev => ({
+                        ...prev,
+                        metaDescription: computedDesc,
+                        keywords: computedKeywords
+                      }));
+                    }}
+                    className="flex items-center gap-1.5 bg-primary/15 hover:bg-primary/25 text-[#4B3FBF] hover:text-black transition-all duration-300 font-black text-[10px] uppercase tracking-widest px-4 py-2.5 rounded-xl border border-primary/20 cursor-pointer"
+                  >
+                    🪄 Auto-Generate SEO Meta
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-2">
+                    <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest flex justify-between items-center">
+                      <span>Meta Description (120 - 160 Characters)</span>
+                      <span className={`text-[10px] ${formData.metaDescription.length >= 120 && formData.metaDescription.length <= 160 ? "text-[#7BC043] font-black" : "text-gray-400 font-bold"}`}>
+                        {formData.metaDescription.length} chars
+                      </span>
+                    </label>
+                    <textarea 
+                      rows={3}
+                      value={formData.metaDescription}
+                      onChange={(e) => setFormData({...formData, metaDescription: e.target.value})}
+                      className="w-full bg-soft-gray border-none rounded-2xl px-6 py-4 focus:ring-2 focus:ring-primary outline-none font-medium text-gray-600 text-xs resize-none"
+                      placeholder="Meta description displayed in search results..."
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">
+                      SEO Keywords (Comma Separated)
+                    </label>
+                    <textarea 
+                      rows={3}
+                      value={formData.keywords}
+                      onChange={(e) => setFormData({...formData, keywords: e.target.value})}
+                      className="w-full bg-soft-gray border-none rounded-2xl px-6 py-4 focus:ring-2 focus:ring-primary outline-none font-medium text-gray-600 text-xs resize-none"
+                      placeholder="e.g. Learn German Karachi, best language center Pakistan..."
+                    />
+                  </div>
+                </div>
               </div>
             </div>
 

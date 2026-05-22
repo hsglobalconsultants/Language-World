@@ -85,12 +85,12 @@ export default function LifeAtLW() {
           </p>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 grid-rows-2 gap-4 h-[600px] md:h-[800px]">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 md:grid-rows-2 gap-4 md:gap-6 h-auto md:h-[800px]">
           {/* Main Large Image */}
           <motion.div 
             initial={{ opacity: 0, x: -20 }}
             whileInView={{ opacity: 1, x: 0 }}
-            className="col-span-2 row-span-2 relative group overflow-hidden rounded-[2.5rem] shadow-xl"
+            className="col-span-1 sm:col-span-2 md:col-span-2 md:row-span-2 relative group overflow-hidden rounded-[2rem] md:rounded-[2.5rem] shadow-xl min-h-[300px] sm:min-h-[400px] md:min-h-0 aspect-[4/3] sm:aspect-video md:aspect-auto"
           >
             <img 
               src={displayImages[0]?.url} 
@@ -108,7 +108,7 @@ export default function LifeAtLW() {
           <motion.div 
             initial={{ opacity: 0, y: -20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            className="col-span-1 row-span-1 relative group overflow-hidden rounded-[2rem] shadow-lg"
+            className="col-span-1 row-span-1 relative group overflow-hidden rounded-[1.5rem] md:rounded-[2rem] shadow-lg aspect-square md:aspect-auto"
           >
             <img 
               src={displayImages[1]?.url} 
@@ -121,7 +121,7 @@ export default function LifeAtLW() {
           <motion.div 
             initial={{ opacity: 0, y: -20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            className="col-span-1 row-span-1 relative group overflow-hidden rounded-[2rem] shadow-lg"
+            className="col-span-1 row-span-1 relative group overflow-hidden rounded-[1.5rem] md:rounded-[2rem] shadow-lg aspect-square md:aspect-auto"
           >
             <img 
               src={displayImages[2]?.url} 
@@ -134,7 +134,7 @@ export default function LifeAtLW() {
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            className="col-span-1 row-span-1 relative group overflow-hidden rounded-[2rem] shadow-lg"
+            className="col-span-1 row-span-1 relative group overflow-hidden rounded-[1.5rem] md:rounded-[2rem] shadow-lg aspect-square md:aspect-auto"
           >
             <img 
               src={displayImages[3]?.url} 
@@ -146,7 +146,7 @@ export default function LifeAtLW() {
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            className="col-span-1 row-span-1 relative group overflow-hidden rounded-[2rem] shadow-lg"
+            className="col-span-1 row-span-1 relative group overflow-hidden rounded-[1.5rem] md:rounded-[2rem] shadow-lg aspect-square md:aspect-auto"
           >
             <img 
               src={displayImages[4]?.url} 

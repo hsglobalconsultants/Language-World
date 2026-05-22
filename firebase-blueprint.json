@@ -84,6 +84,20 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["url", "title", "createdAt"]
+    },
+    "SuccessStory": {
+      "title": "Success Story",
+      "description": "A student success story with certificate",
+      "type": "object",
+      "properties": {
+        "studentName": { "type": "string" },
+        "course": { "type": "string" },
+        "certificateUrl": { "type": "string" },
+        "achievement": { "type": "string" },
+        "date": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["studentName", "course", "certificateUrl", "createdAt"]
     }
   },
   "firestore": {
@@ -110,6 +124,10 @@
     "/gallery/{itemId}": {
       "schema": "GalleryItem",
       "description": "Collection of photos for the gallery"
+    },
+    "/success-stories/{storyId}": {
+      "schema": "SuccessStory",
+      "description": "Collection of student certificates and success stories"
     }
   }
 }

@@ -21,8 +21,9 @@ interface GermanQuestion {
 }
 
 const GERMAN_QUESTIONS: GermanQuestion[] = [
+  // ==================== LEVEL A1 ====================
   {
-    id: 'g1',
+    id: 'g1_reading',
     type: 'reading',
     level: 'A1',
     title: 'Leseverstehen (Reading)',
@@ -30,62 +31,255 @@ const GERMAN_QUESTIONS: GermanQuestion[] = [
     instruction: 'Lesen Sie den Text und verstehen Sie die Hauptpunkte. (Read the text and understand the main points.)',
     content: 'Hallo! Ich heiße Markus und ich komme aus Berlin. Ich bin 25 Jahre alt und arbeite als Lehrer. In meiner Freizeit spiele ich gerne Fußball und höre Musik.',
     grammarRule: 'Present tense (Präsens) of regular and irregular verbs.',
-    exampleAnswer: 'Markus ist Lehrer und kommt aus Berlin.',
+    exampleAnswer: 'Markus ist Lehrer und kommt aus Berlin. Er spielt gerne Fußball.',
     timeLimit: 600,
   },
   {
-    id: 'g2',
+    id: 'g1_grammar',
     type: 'grammar',
     level: 'A1',
     title: 'Grammatik (Grammar)',
     topic: 'Verben im Präsens (Verbs in present tense)',
     instruction: 'Wählen Sie die richtige Form von "sein". (Choose the correct form of "to be".)',
     content: 'Woher ______ du? - Ich komme aus Karachi.',
-    grammarRule: 'Conjugation of the auxiliary verb "sein" (bist for 2nd person singular).',
+    grammarRule: 'Conjugation of the auxiliary verb "sein" ("bist" for 2nd person singular).',
     exampleAnswer: 'bist',
     options: ['bin', 'bist', 'ist', 'sind'],
     timeLimit: 60,
   },
   {
-    id: 'g3',
+    id: 'g1_vocabulary',
+    type: 'vocabulary',
+    level: 'A1',
+    title: 'Wortschatz (Vocabulary)',
+    topic: 'Begrüßung & Höflichkeit (Greetings & Politeness)',
+    instruction: 'Welches Wort passt in die Lücke? (Which word fits in the blank?)',
+    content: 'Guten Tag, wie geht es ______? - Danke, sehr gut!',
+    grammarRule: 'Formal greeting and dative pronoun "Ihnen".',
+    exampleAnswer: 'Ihnen',
+    options: ['dir', 'Ihnen', 'euch', 'sie'],
+    timeLimit: 60,
+  },
+  {
+    id: 'g1_writing',
+    type: 'writing',
+    level: 'A1',
+    title: 'Schriftlicher Ausdruck (Writing)',
+    topic: 'E-Mail an den Lehrer (Email to the teacher)',
+    instruction: 'Schreiben Sie eine kurze E-Mail (ca. 30 Wörter). Sie können am Samstag nicht zum Deutschkurs kommen. Schreiben Sie an Ihren Lehrer Herrn Wagner.',
+    content: 'Schreiben Sie:\n1. Warum kommen Sie nicht?\n2. Entschuldigen Sie sich.\n3. Wann kommen Sie wieder?',
+    grammarRule: 'Formal salutation, apologizing, subordinate clauses with "weil".',
+    exampleAnswer: 'Sehr geehrter Herr Wagner, ich kann am Samstag leider nicht zum Deutschkurs kommen, weil ich krank bin. Bitte entschuldigen Sie mein Fehlen. Nächste Woche bin ich wieder im Kurs. Viele Grüße, [Ihr Name]',
+    timeLimit: 900,
+  },
+  {
+    id: 'g1_speaking',
+    type: 'speaking',
+    level: 'A1',
+    title: 'Mündlicher Ausdruck (Speaking Simulation)',
+    topic: 'Einkaufen im Supermarkt (Shopping)',
+    instruction: 'Stellen Sie sich vor, Sie sind im Supermarkt. Fragen Sie nach dem Preis von Äpfeln. (Type what you would say to simulate a spoken answer.)',
+    content: 'Fragen Sie nach dem Preis und kaufen Sie ein Kilo.',
+    grammarRule: 'Interrogative sentence structure and using numbers/quantities.',
+    exampleAnswer: 'Entschuldigung, wie viel kostet ein Kilo Äpfel? Ich möchte bitte ein Kilo kaufen. Danke!',
+    timeLimit: 120,
+  },
+
+  // ==================== LEVEL A2 ====================
+  {
+    id: 'g2_reading',
+    type: 'reading',
+    level: 'A2',
+    title: 'Leseverstehen (Reading)',
+    topic: 'Ein Tag in München (A Day in Munich)',
+    instruction: 'Lesen Sie den Text und verstehen Sie die Absicht. (Read the text and understand the meaning.)',
+    content: 'Liebe Sarah, gestern war ich in München. Ich habe den Englischen Garten besucht und dort ein Eis gegessen. Danach war ich im Deutschen Museum. Das war sehr interessant! Am Abend haben wir in einem bayerischen Restaurant zu Abend gegessen. Morgen fahre ich zurück nach Berlin.',
+    grammarRule: 'Past tense (Perfekt) of verbs with auxiliary verbs "haben" or "sein".',
+    exampleAnswer: 'Der Absender war gestern in München, hat ein Museum besucht und im Restaurant gegessen.',
+    timeLimit: 600,
+  },
+  {
+    id: 'g2_grammar',
+    type: 'grammar',
+    level: 'A2',
+    title: 'Grammatik (Grammar)',
+    topic: 'Lokalpräpositionen (Local Prepositions)',
+    instruction: 'Wählen Sie die richtige Präposition. (Choose the correct preposition.)',
+    content: 'Am Wochenende gehen wir ______ Kino, um einen neuen Film zu sehen.',
+    grammarRule: 'Accusative direction preposition "in" combined with "das" (= ins).',
+    exampleAnswer: 'ins',
+    options: ['im', 'ins', 'nach', 'zu'],
+    timeLimit: 60,
+  },
+  {
+    id: 'g2_vocabulary',
     type: 'vocabulary',
     level: 'A2',
     title: 'Wortschatz (Vocabulary)',
     topic: 'Einkaufen und Essen (Shopping and Food)',
     instruction: 'Welches Wort passt in die Lücke? (Which word fits in the blank?)',
-    content: 'Ich möchte ein ______ kaufen. Ich habe Hunger.',
-    grammarRule: 'Noun gender (Das Brötchen) and accusative case usage.',
+    content: 'Ich möchte ein ______ kaufen, weil ich wirklich hungrig bin.',
+    grammarRule: 'Noun gender and accusative case usage.',
     exampleAnswer: 'Brötchen',
     options: ['Auto', 'Brötchen', 'Fahrrad', 'Buch'],
     timeLimit: 60,
   },
   {
-    id: 'g4',
+    id: 'g2_writing',
     type: 'writing',
     level: 'A2',
     title: 'Schriftlicher Ausdruck (Writing)',
-    topic: 'Einladung (Invitation)',
-    instruction: 'Schreiben Sie eine E-Mail an einen Freund (ca. 40-50 Wörter). (Write an email to a friend, approx. 40-50 words.)',
-    content: 'Thema: Laden Sie Ihren Freund zu einer Geburtstagsparty am Samstagabend ein. Sagen Sie: Wann und wo ist die Party?',
-    grammarRule: 'Sentence structure in emails, modal verbs for invitations, and prepositional phrases for time/location.',
-    exampleAnswer: 'Lieber Max, ich lade dich herzlich zu meiner Geburtstagsparty ein! Die Party ist am Samstag um 20 Uhr bei mir zu Hause. Ich freue mich auf dein Kommen! Viele Grüße, [Dein Name]',
+    topic: 'Einladung zur Geburtstagsparty (Birthday Invitation)',
+    instruction: 'Schreiben Sie eine E-Mail an einen Kollegen (ca. 40-50 Wörter). Laden Sie ihn zu Ihrer Party ein.',
+    content: 'Sagen Sie:\n1. Wann und wo ist die Party?\n2. Warum feiern Sie?\n3. Was sollen die Gäste mitbringen?',
+    grammarRule: 'Sentence structure in informal emails, prepositions of time ("an", "um").',
+    exampleAnswer: 'Lieber Max, ich lade dich herzlich zu meiner Geburtstagsparty am Samstag um 20 Uhr bei mir zu Hause ein! Ich feiere meinen 30. Geburtstag. Bring bitte gute Laune und etwas Saft mit! Viele Grüße, [Dein Name]',
     timeLimit: 900,
   },
   {
-    id: 'g5',
+    id: 'g2_speaking',
+    type: 'speaking',
+    level: 'A2',
+    title: 'Mündlicher Ausdruck (Speaking Simulation)',
+    topic: 'Wegbeschreibung (Giving Directions)',
+    instruction: 'Erklären Sie einem Passanten auf der Straße den Weg zum Hauptbahnhof. (Type what you would say.)',
+    content: 'Erklären Sie dem Touristen, er solle geradeaus gehen up to the traffic light, dann an der Ampel rechts abbiegen.',
+    grammarRule: 'Imperative sentence structure: "Gehen Sie...", "Biegen Sie...".',
+    exampleAnswer: 'Gehen Sie zuerst geradeaus bis zur Ampel. An der Ampel biegen Sie dann nach rechts ab. Der Hauptbahnhof ist direkt auf der linken Seite.',
+    timeLimit: 120,
+  },
+
+  // ==================== LEVEL B1 ====================
+  {
+    id: 'g3_reading',
+    type: 'reading',
+    level: 'B1',
+    title: 'Leseverstehen (Reading)',
+    topic: 'Gesunde Ernährung im Alltag (Healthy Eating)',
+    instruction: 'Lesen Sie den Zeitungsartikel und fassen Sie das Hauptargument zusammen. (Read the article and summarize the main argument.)',
+    content: 'Gesunde Ernährung wird in unserer heutigen stressigen Gesellschaft immer wichtiger. Viele Menschen greifen aus Zeitmangel zu ungesunden Fertiggerichten, obwohl diese oft extrem viel Zucker, Salz und gesättigte Fette enthalten. Ernährungsexperten raten dringend dazu, am Wochenende frisch zu kochen und Portionen für die Arbeitswoche einzufrieren, was als "Meal Prepping" bekannt ist.',
+    grammarRule: 'Relative clauses (Relativsätze) and causal clauses.',
+    exampleAnswer: 'Fertiggerichte sind ungesund. Meal Prepping am Wochenende ist eine gesunde, zeitsparende Alternative für die Arbeitswoche.',
+    timeLimit: 600,
+  },
+  {
+    id: 'g3_grammar',
+    type: 'grammar',
+    level: 'B1',
+    title: 'Grammatik (Grammar)',
+    topic: 'Konjunktiv II (Subjunctive II)',
+    instruction: 'Wählen Sie das passende konjugierte Verb im Konjunktiv II. (Choose the correct Subjunctive II verb.)',
+    content: 'Wenn ich am Wochenende mehr Freizeit ______, würde ich ein neues Hobby lernen.',
+    grammarRule: 'Hypothetical condition clauses using "hätte" (subjunctive II).',
+    exampleAnswer: 'hätte',
+    options: ['habe', 'hätte', 'hatte', 'hast'],
+    timeLimit: 60,
+  },
+  {
+    id: 'g3_vocabulary',
+    type: 'vocabulary',
+    level: 'B1',
+    title: 'Wortschatz (Vocabulary)',
+    topic: 'Gesundheit und Fitness (Health and Fitness)',
+    instruction: 'Welches Reflexivverb passt am besten in den Kontext? (Which reflexive verb fits best?)',
+    content: 'Der Arzt hat mir empfohlen, mich regelmäßig an der frischen Luft zu ______.',
+    grammarRule: 'Reflexive verbs: "sich bewegen" (to move/exercise).',
+    exampleAnswer: 'bewegen',
+    options: ['schlafen', 'bewegen', 'entspannen', 'erholen'],
+    timeLimit: 60,
+  },
+  {
+    id: 'g3_writing',
+    type: 'writing',
+    level: 'B1',
+    title: 'Schriftlicher Ausdruck (Writing)',
+    topic: 'Meinung zu sozialen Medien (Opinion on Social Media)',
+    instruction: 'Schreiben Sie einen Blogbeitrag (ca. 75-80 Wörter) über soziale Medien.',
+    content: 'Geben Sie Ihre Meinung zu folgenden Punkten:\n1. Warum nutzen Sie soziale Netzwerke?\n2. Was sind die potenziellen Gefahren?\n3. Wie schätzen Sie die Relevanz im Alltag ein?',
+    grammarRule: 'Connecting sentences: "...einerseits / andererseits...", "meiner Meinung nach...".',
+    exampleAnswer: 'Meiner Meinung nach sind soziale Medien heute unverzichtbar, um mit Freunden leicht in Kontakt zu bleiben. Einerseits bieten sie unendliche Kommunikation. Andererseits besteht jedoch das Risiko einer Sucht oder des Datenmissbrauchs. Wir sollten sie also mit klarem Zeitlimit nutzen.',
+    timeLimit: 900,
+  },
+  {
+    id: 'g3_speaking',
     type: 'speaking',
     level: 'B1',
     title: 'Mündlicher Ausdruck (Speaking Simulation)',
-    topic: 'Wohnen und Träume (Housing and Dreams)',
-    instruction: 'Beschreiben Sie Ihr Traumhaus. (Describe your dream house. Input your spoken response as text for evaluation.)',
-    content: 'Wo möchten Sie wohnen? Wie sieht das Haus aus? Warum gefällt es Ihnen?',
-    grammarRule: 'Subjunctive II (Konjunktiv II) for wishes ("Ich würde gerne..."), and descriptive adjectives with correct declension.',
-    exampleAnswer: 'Mein Traumhaus stünde am Meer. Es hätte viele große Fenster und einen modernen Garten. Ich würde dort gerne mit meiner Familie leben, weil die Aussicht wunderschön ist.',
+    topic: 'Umweltschutz im Alltag (Environmental Protection)',
+    instruction: 'Sprechen Sie kurz über Ihre Meinung zu Umweltschutz im Alltag. (Type what you would present.)',
+    content: 'Erläutern Sie: Was tun Sie persönlich für den Umweltschutz? Warum ist das Thema wichtig?',
+    grammarRule: 'Structure of a presentation, stating opinions, expressing importance.',
+    exampleAnswer: 'Meiner Meinung nach ist Umweltschutz extrem wichtig für unsere Zukunft. Ich persönlich versuche, Plastikmüll zu vermeiden, trenne meinen Müll und fahre oft mit dem Fahrrad statt mit dem Auto. Jeder kleine Schritt hilft.',
+    timeLimit: 120,
+  },
+
+  // ==================== LEVEL B2 ====================
+  {
+    id: 'g4_reading',
+    type: 'reading',
+    level: 'B2',
+    title: 'Leseverstehen (Reading)',
+    topic: 'Künstliche Intelligenz am Arbeitsplatz (AI at Work)',
+    instruction: 'Lesen Sie den Text und analysieren Sie die Argumentation des Autors. (Read and analyze the argument.)',
+    content: 'Die weitreichende Integration von Künstlicher Intelligenz (KI) in moderne Arbeitsprozesse revolutioniert gegenwärtig zahlreiche Wirtschaftszweige in rasantem Tempo. Während Optimisten hervorheben, dass repetitive Routineaufgaben effizient automatisiert werden und dadurch wertvolle Ressourcen für kreative Tätigkeiten entstehen, äußern Kritiker berechtigte Sorgen über den schleichenden Verlust qualifizierter Arbeitsplätze. Eine zukunftsorientierte Transformation verlangt deshalb kontinuierliche Umschulung.',
+    grammarRule: 'Complex double-conjunctions ("während..."), nominal styles, and passive sentences.',
+    exampleAnswer: 'Die Einführung von KI führt zu einer Rationalisierung und verlangt andauernde Bildungskonzepte für die Arbeitnehmer.',
+    timeLimit: 600,
+  },
+  {
+    id: 'g4_grammar',
+    type: 'grammar',
+    level: 'B2',
+    title: 'Grammatik (Grammar)',
+    topic: 'Genitivpräpositionen (Genitive Prepositions)',
+    instruction: 'Wählen Sie den korrekten Artikel für die Präposition "trotz". (Choose the correct genitive article.)',
+    content: 'Trotz ______ schlechten Wetters ließen sich die engagierten Wanderer nicht aufhalten.',
+    grammarRule: 'Genitive case triggered by the preposition "trotz" for a masculine singular noun ("des Wetters").',
+    exampleAnswer: 'des',
+    options: ['dem', 'das', 'des', 'den'],
+    timeLimit: 60,
+  },
+  {
+    id: 'g4_vocabulary',
+    type: 'vocabulary',
+    level: 'B2',
+    title: 'Wortschatz (Vocabulary)',
+    topic: 'Herausforderungen & Erfolge (Challenges & Successes)',
+    instruction: 'Welches gehobene Verb passt am besten in die Lücke? (Which advanced verb fits best?)',
+    content: 'Der Projektleiter hat die äußerst anspruchsvolle Aufgabe mit Bravour ______.',
+    grammarRule: 'Collocational usage: "eine Aufgabe bewältigen".',
+    exampleAnswer: 'bewältigt',
+    options: ['gelöst', 'bewältigt', 'abgebrochen', 'versagt'],
+    timeLimit: 60,
+  },
+  {
+    id: 'g4_writing',
+    type: 'writing',
+    level: 'B2',
+    title: 'Schriftlicher Ausdruck (Writing)',
+    topic: 'Bewerbung um ein Praktikum (Internship Application)',
+    instruction: 'Verfassen Sie ein professionelles, formelles Bewerbungsschreiben (ca. 100-120 Wörter).',
+    content: 'Schreiben Sie an die Marketing-Abteilung der Firma:\n1. Warum interessieren Sie sich für diese Firma?\n2. Welche Qualifikationen oder Vorkenntnisse bringen Sie mit?',
+    grammarRule: 'Formal German business writing standards, correct address/greeting forms, and nominal-verbal structure.',
+    exampleAnswer: 'Sehr geehrte Damen und Herren, mit großem Interesse bewerbe ich mich um ein Marketing-Praktikum. Da ich bereits praktische Vorkenntnisse im Kampagnenmanagement besitze, reizt mich Ihr Unternehmen sehr. Ich freue mich auf ein persönliches Gespräch. Mit freundlichen Grüßen.',
+    timeLimit: 900,
+  },
+  {
+    id: 'g4_speaking',
+    type: 'speaking',
+    level: 'B2',
+    title: 'Mündlicher Ausdruck (Speaking Simulation)',
+    topic: 'Pro & Kontra: Homeoffice (Working from Home)',
+    instruction: 'Diskutieren Sie differenziert über das Thema Homeoffice. (Type what you would present as text.)',
+    content: 'Wägen Sie Argumente ab wie: Produktivitätssteigerung versus soziale Isolation, und die Trennung von Berufs- und Privatleben.',
+    grammarRule: 'Advanced argumentative structures: "Demgegenüber lässt sich einwenden...", "Ein wesentliches Argument dafür ist...".',
+    exampleAnswer: 'Das Arbeiten im Homeoffice spart wertvolle Wegezeiten und verbessert oft die Balance, birgt jedoch das Risiko der Isolation und des Verschwimmens von Beruf und Freizeit.',
     timeLimit: 120,
   }
 ];
 
 export default function GermanMockTest() {
+  const [selectedLevel, setSelectedLevel] = useState<'A1' | 'A2' | 'B1' | 'B2'>('A1');
   const [isStarted, setIsStarted] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [timeLeft, setTimeLeft] = useState(0);
@@ -98,6 +292,9 @@ export default function GermanMockTest() {
   const [isDownloading, setIsDownloading] = useState(false);
   const [results, setResults] = useState<any>(null);
   const [loadingMessage, setLoadingMessage] = useState("Auswertung wird durchgeführt...");
+
+  const activeQuestions = GERMAN_QUESTIONS.filter(q => q.level === selectedLevel);
+
   
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const reportRef = useRef<HTMLDivElement>(null);
@@ -141,14 +338,14 @@ export default function GermanMockTest() {
   const beginExam = () => {
     setIsStarted(true);
     setLeadCaptured(true);
-    setTimeLeft(GERMAN_QUESTIONS[0].timeLimit);
+    setTimeLeft(activeQuestions[0].timeLimit);
   };
 
   const handleNext = () => {
-    if (currentStep < GERMAN_QUESTIONS.length - 1) {
+    if (currentStep < activeQuestions.length - 1) {
       const nextStep = currentStep + 1;
       setCurrentStep(nextStep);
-      setTimeLeft(GERMAN_QUESTIONS[nextStep].timeLimit);
+      setTimeLeft(activeQuestions[nextStep].timeLimit);
     } else {
       finishTest();
     }
@@ -163,7 +360,7 @@ export default function GermanMockTest() {
     setIsScoring(true);
     
     // Aggregate responses for a holistic evaluation
-    const summary = GERMAN_QUESTIONS.map(q => {
+    const summary = activeQuestions.map(q => {
       return `Task: ${q.title} (${q.type})\nPrompt: ${q.content}\nStudent Response: ${responses[q.id] || "No response"}`;
     }).join('\n\n---\n\n');
 
@@ -276,8 +473,36 @@ export default function GermanMockTest() {
             </div>
           </div>
 
+          {/* Level Selection Dropdown */}
+          <div className="mb-10 max-w-md bg-soft-gray p-6 rounded-[2rem] border border-gray-100 flex flex-col gap-3">
+            <label htmlFor="proficiency-level-select" className="block text-xs font-black text-accent uppercase tracking-widest pl-2">
+              Select Your Proficiency Level (Ziel-Niveau)
+            </label>
+            <div className="relative">
+              <select
+                id="proficiency-level-select"
+                value={selectedLevel}
+                onChange={(e) => setSelectedLevel(e.target.value as 'A1' | 'A2' | 'B1' | 'B2')}
+                className="w-full bg-white text-accent font-extrabold px-5 py-4 rounded-xl border-2 border-transparent focus:border-[#FFCE00] outline-none transition-all cursor-pointer appearance-none shadow-sm text-base pr-12"
+              >
+                <option value="A1">CEFR A1 (Anfänger / Beginner)</option>
+                <option value="A2">CEFR A2 (Grundlegende Kenntnisse / Elementary)</option>
+                <option value="B1">CEFR B1 (Fortgeschrittene Sprachverwendung / Intermediate)</option>
+                <option value="B2">CEFR B2 (Selbstständige Sprachverwendung / Upper Intermediate)</option>
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-accent">
+                <svg className="fill-current h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                  <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                </svg>
+              </div>
+            </div>
+            <p className="text-[11px] text-gray-400 font-bold leading-relaxed pl-2">
+              All tasks, reading items, active spelling-checks, grammar prompts, and audio simulations will dynamically cater to CEFR {selectedLevel} standards.
+            </p>
+          </div>
+
           <button onClick={startTest} className="btn-primary w-full md:w-auto px-12 py-5 text-xl rounded-full flex items-center justify-center gap-3 hover:scale-105 transition-transform bg-[#FFCE00] hover:bg-[#FFCE00]/90 text-black border-none">
-            Begin German Assessment <ArrowRight size={24} />
+            Begin {selectedLevel} Assessment <ArrowRight size={24} />
           </button>
         </div>
       </div>
@@ -441,7 +666,7 @@ export default function GermanMockTest() {
     );
   }
 
-  const currentQuestion = GERMAN_QUESTIONS[currentStep];
+  const currentQuestion = activeQuestions[currentStep];
 
   return (
     <div className="bg-white rounded-[2.5rem] shadow-2xl border border-soft-gray overflow-hidden flex flex-col min-h-[700px]">
@@ -464,7 +689,7 @@ export default function GermanMockTest() {
             <Timer size={24} /> {formatTime(timeLeft)}
           </div>
           <button onClick={handleNext} className="bg-[#FFCE00] text-black px-8 py-3 rounded-full font-black text-sm uppercase tracking-wider transition-colors hover:scale-105 active:scale-95">
-            {currentStep === GERMAN_QUESTIONS.length - 1 ? 'Beenden' : 'Weiter (Next)'}
+            {currentStep === activeQuestions.length - 1 ? 'Beenden' : 'Weiter (Next)'}
           </button>
         </div>
       </div>
@@ -474,10 +699,10 @@ export default function GermanMockTest() {
         <motion.div 
           className="h-full bg-[#FFCE00]"
           initial={{ width: 0 }}
-          animate={{ width: `${((currentStep + 1) / GERMAN_QUESTIONS.length) * 100}%` }}
+          animate={{ width: `${((currentStep + 1) / activeQuestions.length) * 100}%` }}
         />
         <div className="absolute top-4 right-8 text-[10px] font-black text-accent bg-yellow-400 px-3 py-1 rounded-full shadow-sm">
-          AUFGABE {currentStep + 1} VON {GERMAN_QUESTIONS.length}
+          AUFGABE {currentStep + 1} VON {activeQuestions.length}
         </div>
       </div>
 

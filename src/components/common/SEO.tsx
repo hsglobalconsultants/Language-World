@@ -9,9 +9,9 @@ interface SEOProps {
 }
 
 export default function SEO({ 
-  title = "Language World | Your Gateway to Global Communication", 
-  description = "Best German language institute in Karachi offering A1 to B2 courses, IELTS, PTE, and Study Abroad consultancy. Expert teachers and flexible timings.",
-  keywords = "Best German language institute in Karachi, German A1 course Karachi, IELTS preparation Karachi, PTE center Karachi, Study in Germany Pakistan, Language World Karachi, Learn German in Gulshan-e-Iqbal",
+  title = "Language World | Best German Language Institute & IELTS Prep in Karachi | Pakistan's First German AI Tutor", 
+  description = "Learn with expert instructors and Pakistan's first AI-powered German tutor. Prepare for IELTS, PTE, LanguageCert, and professional communication — online and in-person across Pakistan.", 
+  keywords = "German language Pakistan, IELTS preparation Pakistan, PTE coaching, LanguageCert, Business English, AI German tutor, online language courses Pakistan, Best German language institute in Karachi, German A1 course Karachi, IELTS preparation Karachi, PTE center Karachi, Study in Germany Pakistan, Language World Karachi, Learn German in Gulshan-e-Iqbal",
   url = "https://thelanguageworld.com",
   image = "/globe-logo.svg"
 }: SEOProps) {

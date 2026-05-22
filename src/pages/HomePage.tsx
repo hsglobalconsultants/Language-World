@@ -8,28 +8,68 @@ import {
   CheckCircle2,
   Facebook,
   ChevronDown,
-  Calendar
+  Calendar,
+  Sparkles,
+  Cpu
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Link } from "react-router-dom";
 import { CONTACT_INFO, COURSES, TESTIMONIALS } from "../constants/data";
 import { BLOG_POSTS, BlogPost } from "../constants/blogs";
 import CourseCard from "../components/common/CourseCard";
+import SuccessStoriesPreview from "../components/sections/SuccessStoriesPreview";
 import GoogleReviews from "../components/sections/GoogleReviews";
 import LifeAtLW from "../components/sections/LifeAtLW";
 import SEO from "../components/common/SEO";
 import { useState, useEffect } from "react";
 import React from "react";
 import { blogService } from "../services/blogService";
+import { settingsService, SiteSettings } from "../services/settingsService";
 import { useModals } from "../components/ModalContext";
 import ApplyOnlineForm from "../components/common/ApplyOnlineForm";
+import AnnouncementPopup from "../components/common/AnnouncementPopup";
 
 export default function HomePage() {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
   const [blogs, setBlogs] = useState<BlogPost[]>(BLOG_POSTS);
+  const [siteSettings, setSiteSettings] = useState<SiteSettings | null>(() => {
+    try {
+      const cached = localStorage.getItem("siteSettings");
+      return cached ? JSON.parse(cached) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [imgLoaded, setImgLoaded] = useState(false);
   const { openApplyModal } = useModals();
 
   useEffect(() => {
+    // Fetch Settings
+    const fetchSettings = async () => {
+      const data = await settingsService.getSettings();
+      if (data) {
+        setSiteSettings(data);
+        try {
+          localStorage.setItem("siteSettings", JSON.stringify(data));
+        } catch (e) {
+          console.warn("Could not cache settings in localStorage", e);
+        }
+      }
+    };
+    fetchSettings();
+
+    // Subscribe to settings for real-time updates
+    const unsubSettings = settingsService.subscribeToSettings((data) => {
+      setSiteSettings(data);
+      if (data) {
+        try {
+          localStorage.setItem("siteSettings", JSON.stringify(data));
+        } catch (e) {
+          console.warn("Could not cache settings in localStorage", e);
+        }
+      }
+    });
+
     const fetchBlogs = async () => {
       try {
         const dbBlogs = await blogService.getAllBlogs();
@@ -41,11 +81,19 @@ export default function HomePage() {
       }
     };
     fetchBlogs();
+
+    return () => unsubSettings();
   }, []);
 
   const faqs = [
     { q: "What languages do you teach at Language World?", a: "We specialize in German Language (A1 to B2), IELTS, PTE, LanguageCert, and Business Communication courses." },
     { q: "Do you offer online classes?", a: "Yes, we offer both physical and online classes to cater to students worldwide." },
+    { q: "What are the fees for German language courses in Karachi?", a: "The fees for German language courses in Karachi vary depending on the level and class type. Please contact Language World Institute for the latest course fee details and schedules." },
+    { q: "Is German difficult for beginners?", a: "German is not difficult if you learn with proper guidance and regular practice. Beginners can easily start speaking basic German within a few weeks." },
+    { q: "Can I study in Germany after learning German?", a: "Yes, learning German can help you study in Germany, especially for German-taught programs and daily life communication. Many universities also offer English-taught programs." },
+    { q: "Which German level is required for Germany?", a: "Most German universities require B1 or B2 level German for German-taught programs. The required level may vary depending on the university and course." },
+    { q: "Do you offer online German language classes?", a: "Yes, Language World Institute offers online German language classes with live sessions, interactive learning, and flexible timings for students across Pakistan." },
+    { q: "How can I register for Goethe exams in Karachi?", a: "You can register for Goethe exams through the official Goethe-Institut website or by contacting an authorized exam center in Karachi." },
     { q: "What is your success rate for IELTS/PTE?", a: "Our students consistently achieve 7.0+ in IELTS and 65+ in PTE thanks to our result-oriented methodology." },
     { q: "Are the instructors certified?", a: "Absolutely! All our instructors are certified professionals with years of experience in language coaching." },
   ];
@@ -53,9 +101,10 @@ export default function HomePage() {
   return (
     <div className="flex flex-col w-full overflow-hidden">
       <SEO 
-        title="Language World | Best Language Institute in Karachi" 
-        description="Master German, IELTS, and PTE at Language World Karachi. Expert instructors, flexible timings, and certified success center for global opportunities."
+        title="Language World | Best German Language Institute & IELTS Prep in Karachi | Pakistan's First German AI Tutor" 
+        description="Learn with expert instructors and Pakistan's first AI-powered German tutor. Prepare for IELTS, PTE, LanguageCert, and professional communication — online and in-person across Pakistan."
       />
+      <AnnouncementPopup popupSettings={siteSettings?.popup} />
       {/* Hero Section */}
       <section className="relative min-h-[90vh] flex items-center pt-20 overflow-hidden">
         <div className="absolute inset-0 z-0">
@@ -74,32 +123,61 @@ export default function HomePage() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
           >
-            <div className="inline-flex items-center gap-2 px-4 py-1 rounded-full bg-primary/10 text-primary font-bold text-sm mb-6 border border-primary/20">
-              <Globe2 size={16} />
-              <span>Leading Language Institute in Karachi</span>
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary font-bold text-xs sm:text-sm mb-6 border border-primary/20">
+              <Globe2 size={16} className="text-primary animate-pulse" />
+              <span>Pakistan's First AI German Tutor — Now at Language World</span>
             </div>
-            <h1 className="text-5xl lg:text-7xl font-extrabold text-accent leading-tight mb-6">
-              Master Languages. <span className="text-primary italic">Unlock</span> Global Opportunities.
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-accent leading-tight mb-4">
+              Master German, IELTS, PTE & Business English.
             </h1>
-            <p className="text-lg text-gray-600 mb-8 max-w-xl leading-relaxed">
-              Join Language World and prepare for success in German language, IELTS, PTE, LanguageCert, and Business Communication with expert instructors.
+            <h2 className="text-lg sm:text-xl font-bold text-primary mb-6">
+              From Pakistan's Most Trusted Language Institute
+            </h2>
+            <p className="text-base sm:text-lg text-gray-600 mb-8 max-w-xl leading-relaxed">
+              Learn with expert instructors and Pakistan's first AI-powered German tutor. Prepare for IELTS, PTE, LanguageCert, and professional communication — online and in-person across Pakistan.
             </p>
-            <div className="flex flex-col sm:flex-row items-center gap-4">
-              <button 
-                onClick={() => openApplyModal()}
-                className="btn-accent w-full sm:w-auto px-6 py-4 text-base group shadow-xl shadow-accent/25"
-              >
-                Book a Free Consultation <ArrowRight className="group-hover:translate-x-1 transition-transform" />
-              </button>
+
+            {/* Campaign conversion booster badge */}
+            <div className="mb-6 inline-flex items-center gap-2 bg-gradient-to-r from-primary to-accent text-white px-4 py-1.5 rounded-full text-xs font-bold shadow-lg shadow-primary/15 animate-pulse">
+              <span className="flex h-2 w-2 relative">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+              </span>
+              <span>Enrollment Open for New Batches This Week!</span>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+              <div className="relative group/btn cursor-pointer">
+                {/* Visual pulsing aura beneath the primary button */}
+                <div className="absolute -inset-1 bg-gradient-to-r from-primary to-accent rounded-2xl blur opacity-30 group-hover/btn:opacity-60 transition duration-1000 group-hover/btn:duration-200 animate-pulse"></div>
+                <button 
+                  onClick={() => openApplyModal()}
+                  className="relative w-full sm:w-auto inline-flex items-center justify-center gap-3 bg-accent hover:bg-black text-white font-sans font-black tracking-wider text-xs uppercase px-8 py-5 rounded-2xl transition duration-300 shadow-xl group"
+                >
+                  Book a Free Consultation 
+                  <ArrowRight className="group-hover:translate-x-1.5 transition-transform text-primary" size={16} />
+                </button>
+              </div>
+
               <a 
                 href={`https://wa.me/${CONTACT_INFO.whatsapp}`} 
                 target="_blank" 
                 rel="noreferrer" 
-                className="btn-outline w-full sm:w-auto px-10 py-5 text-lg bg-white"
+                className="inline-flex items-center justify-center gap-3 bg-white hover:bg-gray-50 text-accent font-sans font-black tracking-wider text-xs uppercase px-8 py-5 rounded-2xl border border-gray-100 shadow-sm transition duration-300 group/wa"
               >
-                <MessageCircle fill="currentColor" /> Contact on WhatsApp
+                {/* Instant Online Glow Indicator */}
+                <span className="flex h-2 w-2 relative">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                <MessageCircle fill="#25d366" stroke="none" size={18} className="group-hover/wa:scale-110 transition-transform" /> 
+                Contact on WhatsApp
               </a>
             </div>
+
+            <p className="text-[11px] text-gray-400 font-bold uppercase tracking-wider mt-4 pl-1">
+              ⚡ Response Time under 10 minutes • Offline & Online Batches Available
+            </p>
 
             <div className="mt-12 flex items-center gap-6">
               <div className="flex -space-x-4">
@@ -125,39 +203,40 @@ export default function HomePage() {
             initial={{ opacity: 0, scale: 0.8, rotate: -3 }}
             animate={{ opacity: 1, scale: 1, rotate: 0 }}
             transition={{ duration: 1, ease: "backOut" }}
-            className="relative hidden lg:block"
+            className="relative w-full max-w-lg mx-auto lg:max-w-none mt-16 lg:mt-0"
           >
-            <div className="relative z-10 rounded-[3rem] overflow-hidden shadow-2xl border-4 border-white animate-float">
+            <div className={`relative z-10 rounded-[2.5rem] sm:rounded-[3rem] overflow-hidden shadow-2xl border-4 border-white animate-float bg-slate-100 ${!imgLoaded ? "animate-pulse" : ""}`}>
               <img 
-                src="https://images.unsplash.com/photo-1543269865-cbf427effbad?auto=format&fit=crop&q=80&w=1000" 
-                alt="Happy Student" 
-                className="w-full aspect-[4/5] object-cover"
+                src={siteSettings?.heroImage || "https://images.unsplash.com/photo-1622675363211-6e7ad0d6c760?auto=format&fit=crop&q=80&w=1000"} 
+                alt="Language World Students Group" 
+                className={`w-full aspect-[4/5] object-cover transition-opacity duration-700 ease-in-out ${imgLoaded ? 'opacity-100' : 'opacity-0'}`}
                 referrerPolicy="no-referrer"
+                onLoad={() => setImgLoaded(true)}
               />
             </div>
             {/* Floating Cards */}
             <motion.div 
               animate={{ y: [0, -10, 0] }}
               transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-              className="absolute -top-10 -right-10 z-20 glass-card p-6 rounded-2xl shadow-xl border border-primary/20 max-w-[200px]"
+              className="absolute -top-6 -right-4 sm:-top-10 sm:-right-10 z-20 glass-card p-4 sm:p-6 rounded-2xl shadow-xl border border-primary/20 max-w-[150px] sm:max-w-[200px]"
             >
-              <div className="w-10 h-10 bg-primary/20 rounded-lg flex items-center justify-center text-primary mb-2">
-                <Award size={24} />
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-primary/20 rounded-lg flex items-center justify-center text-primary mb-2">
+                <Award size={20} className="sm:w-6 sm:h-6" />
               </div>
-              <h4 className="font-bold text-accent">IELTS Award</h4>
-              <p className="text-xs text-gray-500">Certified Success Center</p>
+              <h4 className="font-bold text-accent text-xs sm:text-sm">IELTS Award</h4>
+              <p className="text-[10px] sm:text-xs text-gray-500">Certified Success Center</p>
             </motion.div>
 
             <motion.div 
               animate={{ y: [0, 10, 0] }}
               transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-              className="absolute -bottom-10 -left-10 z-20 glass-card p-6 rounded-2xl shadow-xl border border-accent/20 max-w-[200px]"
+              className="absolute -bottom-6 -left-4 sm:-bottom-10 sm:-left-10 z-20 glass-card p-4 sm:p-6 rounded-2xl shadow-xl border border-accent/20 max-w-[150px] sm:max-w-[200px]"
             >
-              <div className="w-10 h-10 bg-accent/20 rounded-lg flex items-center justify-center text-accent mb-2">
-                <Users2 size={24} />
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-accent/20 rounded-lg flex items-center justify-center text-accent mb-2">
+                <Users2 size={20} className="sm:w-6 sm:h-6" />
               </div>
-              <h4 className="font-bold text-accent">Expert Tutors</h4>
-              <p className="text-xs text-gray-500">Learn from the best</p>
+              <h4 className="font-bold text-accent text-xs sm:text-sm">Expert Tutors</h4>
+              <p className="text-[10px] sm:text-xs text-gray-500">Learn from the best</p>
             </motion.div>
           </motion.div>
         </div>
@@ -202,6 +281,107 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* German AI Tutor Promo Section */}
+      <section className="py-24 bg-gradient-to-br from-[#0c0f1d] via-[#12162a] to-[#080a14] text-white relative overflow-hidden">
+        {/* Decorative ambient glow */}
+        <div className="absolute inset-0 z-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,206,0,0.1),transparent_50%)]"></div>
+        <div className="absolute top-1/2 left-0 -translate-y-1/2 w-72 h-72 bg-primary/10 rounded-full blur-3xl z-0"></div>
+
+        <div className="max-w-7xl mx-auto px-6 relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
+            {/* Promo Text */}
+            <div className="lg:col-span-7 space-y-8">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#FFCE00]/20 text-[#FFCE00] border border-[#FFCE00]/30 font-bold text-xs uppercase tracking-widest leading-none">
+                <Sparkles size={12} className="animate-pulse" />
+                <span>Pakistan's First German AI Tutor Live</span>
+              </div>
+              
+              <h2 className="text-4xl md:text-5xl font-black text-white leading-tight">
+                Meet Your 24/7 Interactive <span className="text-[#FFCE00]">Pakistan's First German AI Tutor</span>
+              </h2>
+              
+              <p className="text-slate-300 text-base md:text-lg leading-relaxed max-w-2xl">
+                Ready to ace your Goethe Certified A1, A2, B1 or B2 exams? Practice speaking, perfect your grammar, and receive instant native feedback anytime, anywhere. Guided by our advanced AI conversation model.
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2">
+                <div className="flex gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-[#FFCE00] flex-shrink-0">
+                    <Cpu size={20} />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-white text-base">Instant Evaluation</h4>
+                    <p className="text-slate-400 text-sm mt-1">Get instant metrics on pronunciation, word correctness, and grammar delivery.</p>
+                  </div>
+                </div>
+
+                <div className="flex gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-[#FFCE00] flex-shrink-0">
+                    <Sparkles size={20} />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-white text-base">Custom Syllabus Gen</h4>
+                    <p className="text-slate-400 text-sm mt-1">Generate Goethe vocabulary lists and custom training worksheets in 1-click.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-center gap-4 pt-4">
+                <Link 
+                  to="/german-tutor"
+                  id="home-ai-tutor-cta"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#FFCE00] hover:bg-[#ffe04d] text-slate-950 px-8 py-4.5 rounded-2xl font-sans font-black tracking-wider text-xs uppercase shadow-xl hover:shadow-[#FFCE00]/20 transition duration-300 cursor-pointer"
+                >
+                  Start Learning German Free
+                  <ArrowRight size={15} />
+                </Link>
+                <Link 
+                  to="/courses"
+                  className="w-full sm:w-auto text-center py-4 px-8 text-slate-300 hover:text-white text-xs uppercase tracking-wider font-black transition-colors"
+                >
+                  Explore Standard Batches
+                </Link>
+              </div>
+            </div>
+
+            {/* AI Robot illustration with decorative widgets */}
+            <div className="lg:col-span-5 relative">
+              <div className="absolute -inset-1.5 bg-gradient-to-tr from-[#FFCE00] to-primary rounded-[3rem] blur-xl opacity-30 animate-pulse"></div>
+              
+              <div className="relative bg-slate-900/60 backdrop-blur-md rounded-[3rem] p-8 border border-white/10 overflow-visible shadow-2xl flex flex-col items-center">
+                {/* Image overlay */}
+                <div className="w-full rounded-2xl overflow-hidden aspect-square relative bg-slate-950 border border-white/5">
+                  <img 
+                    id="german-ai-tutor-promo-img"
+                    src="https://images.unsplash.com/photo-1485827404703-89b55fcc595e?auto=format&fit=crop&q=80&w=600"
+                    alt="Pakistan's First German AI Tutor Robot" 
+                    className="w-full h-full object-cover opacity-90 hover:scale-105 transition-transform duration-500"
+                    referrerPolicy="no-referrer"
+                  />
+                  {/* Digital interface scanline */}
+                  <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/5 to-transparent pointer-events-none"></div>
+                </div>
+
+                {/* Speech bubbles */}
+                <div className="absolute -top-3 md:-left-3 left-2 z-10 animate-bounce shadow-xl" style={{ animationDuration: "3.5s" }}>
+                  <div className="bg-[#FFCE00] text-slate-950 text-xs font-black px-4 py-2 rounded-2xl rounded-bl-sm border border-[#ffe04d]">
+                    Guten Tag! Wie geht's? 🤖
+                  </div>
+                </div>
+
+
+
+                {/* Tech label badge */}
+                <div className="mt-6 flex flex-col items-center text-center">
+                  <span className="text-[10px] font-black text-[#FFCE00] tracking-widest uppercase">Autonomous Teaching System</span>
+                  <span className="text-xl font-black text-white mt-1">Pakistan's First German AI Tutor v2.5</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Featured Courses Section */}
       <section className="py-24 bg-white">
         <div className="max-w-7xl mx-auto px-6">
@@ -224,6 +404,9 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Student Success Stories Section */}
+      <SuccessStoriesPreview />
 
       {/* Life at Language World Gallery */}
       <LifeAtLW />
@@ -255,10 +438,13 @@ export default function HomePage() {
               >
                 <div className="relative h-64 overflow-hidden">
                   <img 
-                    src={blog.image} 
+                    src={blog.image || "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&q=80&w=800"} 
                     alt={blog.title} 
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                     referrerPolicy="no-referrer"
+                    onError={(e) => {
+                      e.currentTarget.src = "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&q=80&w=800";
+                    }}
                   />
                   <div className="absolute top-6 left-6 px-4 py-1 bg-primary text-white text-xs font-bold rounded-full">
                     {blog.tag}

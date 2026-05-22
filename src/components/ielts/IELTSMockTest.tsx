@@ -12,12 +12,34 @@ interface IELTSQuestion {
   title: string;
   instruction: string;
   content: string;
+  audioUrl?: string;
   questions?: { id: string; label: string; type: 'text' | 'choice'; options?: string[] }[];
   answers?: Record<string, string>;
   timeLimit: number; // in seconds
 }
 
 const IELTS_QUESTIONS: IELTSQuestion[] = [
+  {
+    id: 'i0',
+    type: 'listening',
+    title: 'Listening Test - Part 1',
+    instruction: 'Listen to the audio recording and answer the questions carefully. You can only play it once in a real exam.',
+    content: 'Audio Description: A dialogue between a student and a registrar about German language course enrollment details.',
+    audioUrl: 'https://www.ielts-exam.net/images/listening/Practice_Test_1_Section_1.mp3',
+    questions: [
+      { id: 'l1', label: '1. What is the name of the German language institute?', type: 'text' },
+      { id: 'l2', label: '2. Which level is the student applying for?', type: 'choice', options: ['A1', 'A2', 'B1', 'B2'] },
+      { id: 'l3', label: '3. What day does the weekend batch start?', type: 'text' },
+      { id: 'l4', label: '4. The course fee includes the cost of _____ .', type: 'text' }
+    ],
+    answers: {
+      'l1': 'Language World',
+      'l2': 'A1',
+      'l3': 'Saturday',
+      'l4': 'books'
+    },
+    timeLimit: 600,
+  },
   {
     id: 'i1',
     type: 'reading',
@@ -89,6 +111,7 @@ export default function IELTSMockTest() {
   const [isDownloading, setIsDownloading] = useState(false);
   const [results, setResults] = useState<any>(null);
   const [readingScore, setReadingScore] = useState({ correct: 0, total: 0 });
+  const [listeningScore, setListeningScore] = useState({ correct: 0, total: 0 });
   const [loadingMessage, setLoadingMessage] = useState("Analyzing your IELTS performance...");
   
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -154,28 +177,36 @@ export default function IELTSMockTest() {
   const evaluateResults = async () => {
     setIsScoring(true);
     
-    // Evaluate Reading
-    let correct = 0;
-    let total = 0;
+    // Evaluate Reading & Listening
+    let rCorrect = 0;
+    let rTotal = 0;
+    let lCorrect = 0;
+    let lTotal = 0;
+
     IELTS_QUESTIONS.forEach(q => {
-      if (q.type === 'reading' && q.answers) {
+      if ((q.type === 'reading' || q.type === 'listening') && q.answers) {
         Object.entries(q.answers).forEach(([key, val]) => {
-          total++;
+          if (q.type === 'reading') rTotal++;
+          else lTotal++;
+
           const studentAns = (responses[key] || "").toLowerCase().trim();
           if (studentAns.includes(val.toLowerCase().trim()) || val.toLowerCase().trim().includes(studentAns) && studentAns.length > 2) {
-            correct++;
+            if (q.type === 'reading') rCorrect++;
+            else lCorrect++;
           }
         });
       }
     });
-    setReadingScore({ correct, total });
+
+    setReadingScore({ correct: rCorrect, total: rTotal });
+    setListeningScore({ correct: lCorrect, total: lTotal });
 
     // Score the Writing section via AI
     const writingTask = IELTS_QUESTIONS.find(q => q.type === 'writing');
     const writingResponse = responses[writingTask?.id || ""] || "";
     
     // Aggregate holistic context
-    const summary = `Reading Accuracy: ${correct}/${total}\n\nWriting Response:\n${writingResponse}`;
+    const summary = `Reading Accuracy: ${rCorrect}/${rTotal}\nListening Accuracy: ${lCorrect}/${lTotal}\n\nWriting Response:\n${writingResponse}`;
     
     const ieltsResults = await scoreLanguageTask(
       'IELTS', 
@@ -435,15 +466,26 @@ export default function IELTSMockTest() {
                 </div>
               </div>
 
-              <div className="bg-soft-gray rounded-[3rem] p-10 flex flex-col justify-center border border-gray-200">
-                <h4 className="text-xl font-black text-accent mb-6 uppercase tracking-tight">Reading Score Breakdown</h4>
-                <div className="flex items-center gap-6">
-                  <div className="w-24 h-24 rounded-full border-8 border-primary flex items-center justify-center">
-                    <span className="text-3xl font-black text-accent">{readingScore.correct}</span>
+            <div className="bg-soft-gray rounded-[3rem] p-10 flex flex-col justify-center border border-gray-200">
+                <h4 className="text-xl font-black text-accent mb-6 uppercase tracking-tight">Listening & Reading Breakdown</h4>
+                <div className="space-y-6">
+                  <div className="flex items-center gap-6">
+                    <div className="w-16 h-16 rounded-full border-4 border-primary flex items-center justify-center shrink-0">
+                      <span className="text-xl font-black text-accent">{listeningScore.correct}</span>
+                    </div>
+                    <div>
+                      <p className="text-accent font-bold">Listening: {listeningScore.correct}/{listeningScore.total}</p>
+                      <p className="text-[10px] text-primary font-black uppercase">Part 1 - Audio Simulation</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-gray-500 font-bold">You got {readingScore.correct} out of {readingScore.total} reading items correct.</p>
-                    <p className="text-sm text-primary font-black mt-2">Estimated Reading Band: {readingScore.correct > 7 ? '7.5+' : readingScore.correct > 5 ? '6.0' : '4.5'}</p>
+                  <div className="flex items-center gap-6">
+                    <div className="w-16 h-16 rounded-full border-4 border-accent flex items-center justify-center shrink-0">
+                      <span className="text-xl font-black text-accent">{readingScore.correct}</span>
+                    </div>
+                    <div>
+                      <p className="text-accent font-bold">Reading: {readingScore.correct}/{readingScore.total}</p>
+                      <p className="text-[10px] text-primary font-black uppercase">Academic Reading Passages</p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -547,11 +589,35 @@ export default function IELTSMockTest() {
               className="max-w-7xl mx-auto h-full"
             >
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 h-full">
-                {/* Reference/Passage Side */}
+                {/* Reference/Passage/Audio Side */}
                 <div className="bg-soft-gray/50 rounded-[3rem] p-10 border border-soft-gray shadow-inner overflow-y-auto max-h-[600px]">
                   <h5 className="text-primary font-black uppercase tracking-tighter text-xs mb-6 flex items-center gap-2">
-                    <BookOpen size={14} /> Official Passage Module
+                    {currentQuestion.type === 'listening' ? <Headphones size={14} /> : <BookOpen size={14} />} 
+                    {currentQuestion.type === 'listening' ? 'Listening Audio Console' : 'Official Passage Module'}
                   </h5>
+                  
+                  {currentQuestion.type === 'listening' && (
+                    <div className="mb-10 bg-white p-8 rounded-[2rem] border border-primary/20 shadow-xl">
+                      <div className="flex items-center gap-4 mb-6">
+                        <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center animate-pulse">
+                          <Play className="text-white fill-current" size={20} />
+                        </div>
+                        <div>
+                          <p className="text-accent font-black text-sm">Now Playing: Section 1</p>
+                          <p className="text-gray-400 text-xs font-bold">01:45 / 03:20</p>
+                        </div>
+                      </div>
+                      <div className="w-full bg-gray-100 h-1.5 rounded-full mb-6 overflow-hidden">
+                        <div className="bg-primary h-full w-1/3 rounded-full" />
+                      </div>
+                      <audio controls className="w-full h-10 mb-2">
+                        <source src={currentQuestion.audioUrl} type="audio/mpeg" />
+                        Your browser does not support the audio element.
+                      </audio>
+                      <p className="text-[10px] text-gray-400 font-bold text-center mt-4">REAL-TIME AUDIO SHIELD ACTIVE</p>
+                    </div>
+                  )}
+
                   <div className="prose prose-lg max-w-none">
                     <p className="text-accent font-medium leading-relaxed whitespace-pre-wrap text-lg">
                       {currentQuestion.content}

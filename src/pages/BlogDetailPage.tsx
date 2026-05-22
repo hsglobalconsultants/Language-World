@@ -1,15 +1,75 @@
 import { useParams, Link } from "react-router-dom";
 import { motion } from "motion/react";
-import { Calendar, User, ArrowLeft, Share2, Loader2 } from "lucide-react";
+import { Calendar, User, ArrowLeft, Share2, Loader2, Copy, Check, Facebook, Twitter, Linkedin } from "lucide-react";
 import { BLOG_POSTS, BlogPost } from "../constants/blogs";
 import SEO from "../components/common/SEO";
 import { useEffect, useState } from "react";
 import { blogService } from "../services/blogService";
+import { generateMetaDescription, generateKeywords } from "../utils/seoGenerator";
 
 export default function BlogDetailPage() {
   const { id } = useParams();
   const [blog, setBlog] = useState<BlogPost | null>(null);
   const [loading, setLoading] = useState(true);
+  const [copied, setCopied] = useState(false);
+  const [nativeShareSupported, setNativeShareSupported] = useState(false);
+
+  useEffect(() => {
+    if (navigator.share) {
+      setNativeShareSupported(true);
+    }
+  }, []);
+
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy link:", err);
+    }
+  };
+
+  const shareOnPlatform = (platform: string) => {
+    if (!blog) return;
+    const url = encodeURIComponent(window.location.href);
+    const title = encodeURIComponent(blog.title);
+    let shareUrl = "";
+
+    switch (platform) {
+      case "facebook":
+        shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${url}`;
+        break;
+      case "twitter":
+        shareUrl = `https://twitter.com/intent/tweet?url=${url}&text=${title}`;
+        break;
+      case "linkedin":
+        shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${url}`;
+        break;
+      case "whatsapp":
+        shareUrl = `https://api.whatsapp.com/send?text=${title}%20${url}`;
+        break;
+      default:
+        return;
+    }
+
+    if (shareUrl) {
+      window.open(shareUrl, "_blank", "noopener,noreferrer");
+    }
+  };
+
+  const handleNativeShare = async () => {
+    if (!blog) return;
+    try {
+      await navigator.share({
+        title: blog.title,
+        text: blog.excerpt || blog.metaDescription,
+        url: window.location.href,
+      });
+    } catch (err) {
+      console.error("Failed to share", err);
+    }
+  };
 
   useEffect(() => {
     const fetchBlog = async () => {
@@ -57,21 +117,33 @@ export default function BlogDetailPage() {
     );
   }
 
+  // Dynamically generate fallback SEO tags if they do not exist
+  const cleanMetaDescription = blog.metaDescription && blog.metaDescription.trim()
+    ? blog.metaDescription
+    : generateMetaDescription(blog.title, blog.content, blog.excerpt);
+
+  const cleanKeywords = blog.keywords && blog.keywords.trim()
+    ? blog.keywords
+    : generateKeywords(blog.title, blog.content, blog.tag);
+
   return (
     <div className="flex flex-col bg-white">
       <SEO 
         title={blog.title} 
-        description={blog.metaDescription || blog.excerpt} 
-        keywords={blog.keywords}
+        description={cleanMetaDescription} 
+        keywords={cleanKeywords}
       />
 
       {/* Hero Section */}
       <section className="relative h-[60vh] min-h-[400px] overflow-hidden bg-accent">
         <img 
-          src={blog.image} 
+          src={blog.image || "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&q=80&w=800"} 
           alt={blog.title} 
           className="absolute inset-0 w-full h-full object-cover opacity-60"
           referrerPolicy="no-referrer"
+          onError={(e) => {
+            e.currentTarget.src = "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&q=80&w=800";
+          }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-accent via-accent/50 to-transparent" />
         
@@ -108,12 +180,79 @@ export default function BlogDetailPage() {
                   <ArrowLeft size={20} /> BACK TO BLOG
                 </Link>
                 
-                <div className="p-8 bg-soft-gray rounded-[2rem] border border-gray-100">
-                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Share Article</p>
-                  <div className="flex gap-4">
-                    <button onClick={() => window.open(`https://www.facebook.com/sharer/sharer.php?u=${window.location.href}`, '_blank')} className="w-10 h-10 rounded-full bg-white border border-gray-100 flex items-center justify-center hover:bg-primary hover:text-white transition-all">
-                      <Share2 size={16} />
+                <div className="p-8 bg-soft-gray rounded-[2rem] border border-gray-100 flex flex-col gap-6">
+                  <div>
+                    <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Share Article</p>
+                    <p className="text-xs text-gray-500 font-medium">Spread the knowledge with your circle</p>
+                  </div>
+                  
+                  {/* Share buttons grid */}
+                  <div className="grid grid-cols-4 gap-3">
+                    <button 
+                      onClick={() => shareOnPlatform("facebook")} 
+                      className="w-11 h-11 rounded-2xl bg-white border border-gray-100 flex items-center justify-center hover:bg-blue-600 hover:text-white text-gray-400 transition-all duration-300 hover:shadow-lg hover:scale-105 group cursor-pointer"
+                      title="Share to Facebook"
+                    >
+                      <Facebook size={18} className="group-hover:scale-110 transition-transform duration-300" />
                     </button>
+                    
+                    <button 
+                      onClick={() => shareOnPlatform("twitter")} 
+                      className="w-11 h-11 rounded-2xl bg-white border border-gray-100 flex items-center justify-center hover:bg-black hover:text-white text-gray-400 transition-all duration-300 hover:shadow-lg hover:scale-105 group cursor-pointer"
+                      title="Share to Twitter / X"
+                    >
+                      <Twitter size={18} className="group-hover:scale-110 transition-transform duration-300" />
+                    </button>
+
+                    <button 
+                      onClick={() => shareOnPlatform("linkedin")} 
+                      className="w-11 h-11 rounded-2xl bg-white border border-gray-100 flex items-center justify-center hover:bg-blue-700 hover:text-white text-gray-400 transition-all duration-300 hover:shadow-lg hover:scale-105 group cursor-pointer"
+                      title="Share to LinkedIn"
+                    >
+                      <Linkedin size={18} className="group-hover:scale-110 transition-transform duration-300" />
+                    </button>
+
+                    <button 
+                      onClick={() => shareOnPlatform("whatsapp")} 
+                      className="w-11 h-11 rounded-2xl bg-white border border-gray-100 flex items-center justify-center hover:bg-green-500 hover:text-white text-gray-400 transition-all duration-300 hover:shadow-lg hover:scale-105 group cursor-pointer"
+                      title="Share to WhatsApp"
+                    >
+                      <svg className="w-5 h-5 fill-current group-hover:scale-110 transition-transform duration-300" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12.003 2c-5.52 0-9.99 4.47-9.99 9.99 0 1.77.46 3.44 1.28 4.91L2 22l5.24-1.37c1.41.77 3 1.21 4.76 1.21 5.52 0 9.99-4.47 9.99-9.99 0-5.52-4.47-9.99-9.99-9.99zm5.32 14.17c-.24.67-1.19 1.23-1.63 1.27-.45.04-.97.06-2.58-.59-2.06-.85-3.38-2.93-3.49-3.07-.1-.13-.86-1.13-.86-2.15s.53-1.52.72-1.72c.19-.2.43-.25.57-.25h.41c.14 0 .33-.05.51.38.19.45.64 1.56.69 1.67.05.1.09.23.01.4-.08.16-.16.27-.27.4-.11.13-.24.23-.34.35-.11.11-.22.24-.09.46.13.22.58.95 1.24 1.54.85.76 1.57.99 1.79 1.11.22.11.35.09.48-.06.13-.15.55-.64.7-.86.15-.22.3-.19.51-.11.22.08 1.4.66 1.64.78.24.11.41.17.47.28.06.11.06.64-.18 1.31z"/>
+                      </svg>
+                    </button>
+                  </div>
+
+                  <div className="flex flex-col gap-3 pt-2 border-t border-gray-100">
+                    {/* Copy Link button */}
+                    <button 
+                      onClick={handleCopyLink}
+                      className={`w-full py-3 px-4 rounded-xl flex items-center justify-center gap-2 border text-[11px] font-extrabold tracking-wider transition-all duration-300 shadow-sm cursor-pointer ${
+                        copied 
+                          ? 'bg-green-500 border-green-500 text-white shadow-green-100' 
+                          : 'bg-white border-gray-100 text-accent hover:border-accent/20 hover:bg-gray-50'
+                      }`}
+                    >
+                      {copied ? (
+                        <>
+                          <Check size={14} className="animate-bounce" /> LINK COPIED
+                        </>
+                      ) : (
+                        <>
+                          <Copy size={13} /> COPY ARTICLE LINK
+                        </>
+                      )}
+                    </button>
+
+                    {/* Native Share button if supported */}
+                    {nativeShareSupported && (
+                      <button 
+                        onClick={handleNativeShare}
+                        className="w-full py-3 px-4 rounded-xl bg-primary hover:bg-primary/95 text-white text-[11px] font-extrabold tracking-wider flex items-center justify-center gap-2 transition-all duration-300 shadow-sm hover:shadow-md cursor-pointer"
+                      >
+                        <Share2 size={13} /> MORE OPTIONS
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -148,10 +287,13 @@ export default function BlogDetailPage() {
               >
                 <div className="aspect-video rounded-2xl overflow-hidden mb-6">
                   <img 
-                    src={relatedBlog.image} 
+                    src={relatedBlog.image || "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&q=80&w=800"} 
                     alt={relatedBlog.title} 
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                     referrerPolicy="no-referrer"
+                    onError={(e) => {
+                      e.currentTarget.src = "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&q=80&w=800";
+                    }}
                   />
                 </div>
                 <h3 className="font-bold text-accent group-hover:text-primary transition-colors leading-tight mb-2">

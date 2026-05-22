@@ -11,6 +11,7 @@ export default function GalleryManager() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   useEffect(() => {
     const unsubscribe = galleryService.getGallery((data) => {
@@ -20,22 +21,71 @@ export default function GalleryManager() {
     return () => unsubscribe();
   }, []);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const compressImage = (file: File, maxDimension: number = 1200, quality: number = 0.8): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+
+          // Calculate new dimensions while maintaining aspect ratio
+          if (width > height) {
+            if (width > maxDimension) {
+              height = Math.round((height * maxDimension) / width);
+              width = maxDimension;
+            }
+          } else {
+            if (height > maxDimension) {
+              width = Math.round((width * maxDimension) / height);
+              height = maxDimension;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            reject(new Error("Could not get 2D context from canvas"));
+            return;
+          }
+
+          // Draw image on canvas
+          ctx.drawImage(img, 0, 0, width, height);
+          
+          // Get compressed data url
+          const dataUrl = canvas.toDataURL('image/jpeg', quality);
+          resolve(dataUrl);
+        };
+        img.onerror = () => reject(new Error("Failed to load image object"));
+        img.src = event.target?.result as string;
+      };
+      reader.onerror = () => reject(new Error("Failed to read file"));
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 1024 * 1024) {
-      setError("Image is too large! Please choose a photo smaller than 1MB.");
-      return;
-    }
+    setError(null);
+    setIsSubmitting(true);
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const base64String = reader.result as string;
-      setFilePreview(base64String);
-      setNewItem(prev => ({ ...prev, url: base64String }));
-    };
-    reader.readAsDataURL(file);
+    try {
+      // Compress the image down to standard optimized web resolution & size
+      const compressedDataUrl = await compressImage(file, 1200, 0.75);
+      setFilePreview(compressedDataUrl);
+      setNewItem(prev => ({ ...prev, url: compressedDataUrl }));
+    } catch (err: any) {
+      console.error("Gallery photo compression failed:", err);
+      setError("Failed to process and compress the photo. Please try another file.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -63,10 +113,10 @@ export default function GalleryManager() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this photo from the gallery?")) return;
     setError(null);
     try {
       await galleryService.deleteItem(id);
+      setConfirmDeleteId(null);
     } catch (err: any) {
       console.error("Error deleting gallery item:", err);
       setError("Failed to delete photo. Check permissions.");
@@ -196,13 +246,33 @@ export default function GalleryManager() {
                     className="w-full h-full object-cover"
                     referrerPolicy="no-referrer"
                   />
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <button 
-                      onClick={() => handleDelete(item.id)}
-                      className="p-3 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-lg"
-                    >
-                      <Trash2 size={20} />
-                    </button>
+                  <div className={`absolute inset-0 bg-black/60 transition-all flex flex-col items-center justify-center p-4 gap-2 ${confirmDeleteId === item.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                    {confirmDeleteId === item.id ? (
+                      <>
+                        <span className="text-[10px] text-white font-extrabold uppercase tracking-widest text-center mb-1">Delete permanently?</span>
+                        <div className="flex gap-2 w-full max-w-[160px]">
+                          <button 
+                            onClick={() => handleDelete(item.id)}
+                            className="flex-grow py-2 px-3 bg-red-600 hover:bg-red-700 text-white text-[10px] font-black rounded-xl transition-all shadow-md cursor-pointer"
+                          >
+                            Confirm
+                          </button>
+                          <button 
+                            onClick={() => setConfirmDeleteId(null)}
+                            className="flex-grow py-2 px-3 bg-white/20 hover:bg-white/30 text-white text-[10px] font-black rounded-xl transition-all shadow-md cursor-pointer"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      <button 
+                        onClick={() => setConfirmDeleteId(item.id)}
+                        className="p-3 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-lg cursor-pointer"
+                      >
+                        <Trash2 size={20} />
+                      </button>
+                    )}
                   </div>
                 </div>
                 <div className="p-4">

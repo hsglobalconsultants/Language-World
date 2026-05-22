@@ -56,27 +56,22 @@ service cloud.firestore {
     // Contacts Collection
     match /contacts/{contactId} {
       function isValidContact(data) {
-        return data.name is string && data.name.size() <= 100 &&
-               data.email is string && data.email.size() <= 100 &&
-               data.message is string && data.message.size() <= 5000;
+        return data.name is string && data.name.size() <= 1000 &&
+               data.email is string && data.email.size() <= 1000;
       }
-      allow create: if isValidContact(request.resource.data) && 
-                    request.resource.data.createdAt == request.time;
+      allow create: if isValidContact(request.resource.data);
       allow read, update, delete: if isAdmin();
     }
 
     // Applications Collection
     match /applications/{applicationId} {
       function isValidApplication(data) {
-        return data.fullName is string && data.fullName.size() <= 100 &&
-               data.email is string && data.email.size() <= 100 &&
-               data.phone is string && data.phone.size() <= 30 &&
-               data.course is string &&
-               data.status == "pending" &&
-               (data.message == "" || (data.message is string && data.message.size() <= 2000));
+        return data.fullName is string && data.fullName.size() <= 1000 &&
+               data.email is string && data.email.size() <= 1000 &&
+               data.phone is string && data.phone.size() <= 1000 &&
+               data.course is string;
       }
-      allow create: if isValidApplication(request.resource.data) && 
-                    request.resource.data.createdAt == request.time;
+      allow create: if isValidApplication(request.resource.data);
       allow read, update, delete: if isAdmin();
     }
 
@@ -105,6 +100,21 @@ service cloud.firestore {
                     isValidGalleryItem(request.resource.data) &&
                     request.resource.data.createdAt == request.time;
       allow update: if isAdmin() && isValidGalleryItem(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    // Success Stories Collection
+    match /success-stories/{storyId} {
+      function isValidSuccessStory(data) {
+        return data.studentName is string && data.studentName.size() <= 200 &&
+               data.course is string && data.course.size() <= 200 &&
+               data.certificateUrl is string && data.certificateUrl.size() <= 2000000;
+      }
+      allow read: if true;
+      allow create: if isAdmin() && 
+                    isValidSuccessStory(request.resource.data) &&
+                    request.resource.data.createdAt == request.time;
+      allow update: if isAdmin() && isValidSuccessStory(request.resource.data);
       allow delete: if isAdmin();
     }
   }

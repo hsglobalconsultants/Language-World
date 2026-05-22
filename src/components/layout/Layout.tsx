@@ -2,6 +2,7 @@ import { Outlet } from "react-router-dom";
 import Header from "./Header";
 import Footer from "./Footer";
 import WhatsAppButton from "../common/WhatsAppButton";
+import GermanAITutorWidget from "../common/GermanAITutorWidget";
 import { motion, AnimatePresence } from "motion/react";
 import { useLocation } from "react-router-dom";
 import { useEffect } from "react";
@@ -30,6 +31,7 @@ export default function Layout() {
         </AnimatePresence>
       </main>
       <Footer />
+      <GermanAITutorWidget />
       <WhatsAppButton />
     </div>
   );

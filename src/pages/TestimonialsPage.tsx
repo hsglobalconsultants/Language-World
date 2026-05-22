@@ -31,7 +31,7 @@ export default function TestimonialsPage() {
 
       <section className="py-24 bg-white">
         <div className="max-w-7xl mx-auto px-6">
-          <GoogleReviews dark={false} />
+          <GoogleReviews />
         </div>
       </section>
     </div>

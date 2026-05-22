@@ -5,7 +5,7 @@ export const CONTACT_INFO = {
   email: "info@thelanguageworld.com",
   phone: "021 34155182",
   mobile: "03007007699",
-  whatsapp: "03007007699",
+  whatsapp: "923007007699",
   address: "Office 1 FL 4 / 14 Block 5 Gulshan E Iqbal Karachi (near nipa chorangI)",
   socials: {
     facebook: "https://www.facebook.com/thelanguageworldPakistan",
@@ -101,13 +101,28 @@ export const MISSION_VISION = [
 
 export const NAV_LINKS = [
   { label: "Home", path: "/" },
-  { label: "About Us", path: "/about" },
+  { 
+    label: "About Us", 
+    path: "/about",
+    dropdown: [
+      { label: "About Language World", path: "/about" },
+      { label: "Success Stories", path: "/success-stories" },
+      { label: "Testimonials", path: "/testimonials" },
+    ]
+  },
   { 
     label: "Courses", 
     path: "/courses",
     dropdown: COURSES.map(c => ({ label: c.title, path: c.path }))
   },
-  { label: "Testimonials", path: "/testimonials" },
+  { 
+    label: "Mock Exams", 
+    path: "#",
+    dropdown: [
+      { label: "IELTS Mock Exam", path: "/ielts-test" },
+      { label: "PTE Mock Exam", path: "/pte-test" },
+    ]
+  },
   { label: "Blog", path: "/blog" },
   { label: "Contact Us", path: "/contact" },
 ];

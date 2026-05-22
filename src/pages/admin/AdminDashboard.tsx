@@ -18,7 +18,8 @@ import {
   RefreshCcw,
   Users,
   Video,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Trophy
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
@@ -29,9 +30,11 @@ import { useEffect, useState } from "react";
 import { BLOG_POSTS, BlogPost } from "../../constants/blogs";
 import VeoStudio from "../../components/admin/VeoStudio";
 import GalleryManager from "../../components/admin/GalleryManager";
+import SuccessStoriesManager from "./SuccessStoriesManager";
+import SiteSettingsManager from "../../components/admin/SiteSettingsManager";
 import { collection, query, orderBy, onSnapshot, doc, updateDoc, deleteDoc, writeBatch, getDocs, serverTimestamp } from "firebase/firestore";
 
-type AdminTab = 'blogs' | 'contacts' | 'applications' | 'leads' | 'veo' | 'gallery';
+type AdminTab = 'blogs' | 'contacts' | 'applications' | 'leads' | 'veo' | 'gallery' | 'stories' | 'settings';
 
 export default function AdminDashboard() {
   const { user, isAdmin, loading: authLoading } = useAuth();
@@ -44,6 +47,7 @@ export default function AdminDashboard() {
   const [leads, setLeads] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!authLoading && (!user || !isAdmin)) {
@@ -159,7 +163,7 @@ export default function AdminDashboard() {
 
     if (activeTab === 'blogs') {
       fetchBlogs();
-    } else if (activeTab === 'veo' || activeTab === 'gallery') {
+    } else if (activeTab === 'veo' || activeTab === 'gallery' || activeTab === 'stories' || activeTab === 'settings') {
       setLoading(false);
     }
 
@@ -171,9 +175,13 @@ export default function AdminDashboard() {
   }, [activeTab]);
 
   const handleDeleteBlog = async (id: string) => {
-    if (window.confirm("Are you sure you want to delete this blog post?")) {
+    try {
       await blogService.deleteBlog(id);
       setBlogs(blogs.filter(b => b.id !== id as any));
+      setConfirmDeleteId(null);
+    } catch (error: any) {
+      console.error("Failed to delete blog:", error);
+      alert(`Failed to delete blog: ${error.message || "Unknown error"}`);
     }
   };
 
@@ -182,25 +190,21 @@ export default function AdminDashboard() {
   };
 
   const handleDeleteItem = async (collectionName: string, id: string) => {
-    console.log(`[Admin] Initiating delete for ${id} in ${collectionName}`);
-    
-    if (window.confirm("Are you sure you want to delete this permanently? This action cannot be undone.")) {
-      try {
-        console.log(`[Admin] Confirmed deletion for ${id}`);
-        const docRef = doc(db, collectionName, id);
-        
-        await deleteDoc(docRef);
-        
-        console.log(`[Admin] Successfully deleted ${id}`);
-        // Manually update states for immediate UI feedback if onSnapshot lags
-        if (collectionName === 'leads') setLeads(prev => prev.filter(l => l.id !== id));
-        if (collectionName === 'contacts') setContacts(prev => prev.filter(c => c.id !== id));
-        if (collectionName === 'applications') setApplications(prev => prev.filter(a => a.id !== id));
-        
-      } catch (error: any) {
-        console.error(`[Admin] Delete failed for ${id}:`, error);
-        alert(`Failed to delete: ${error.message || "Unknown error (likely permissions)"}`);
-      }
+    console.log(`[Admin] Initiating direct delete for ${id} in ${collectionName}`);
+    try {
+      const docRef = doc(db, collectionName, id);
+      await deleteDoc(docRef);
+      console.log(`[Admin] Successfully deleted ${id}`);
+      
+      // Manually update states for immediate UI feedback if onSnapshot lags
+      if (collectionName === 'leads') setLeads(prev => prev.filter(l => l.id !== id));
+      if (collectionName === 'contacts') setContacts(prev => prev.filter(c => c.id !== id));
+      if (collectionName === 'applications') setApplications(prev => prev.filter(a => a.id !== id));
+      
+      setConfirmDeleteId(null);
+    } catch (error: any) {
+      console.error(`[Admin] Delete failed for ${id}:`, error);
+      alert(`Failed to delete: ${error.message || "Unknown error"}`);
     }
   };
 
@@ -271,8 +275,20 @@ export default function AdminDashboard() {
             {activeTab === 'gallery' && <div className="w-2 h-2 bg-white rounded-full" />}
           </button>
 
-          <button onClick={() => alert("Global settings coming soon!")} className="w-full flex items-center gap-3 p-4 text-white/60 hover:text-white hover:bg-white/5 rounded-2xl font-bold transition-all">
-            <Settings size={20} /> Settings
+          <button 
+            onClick={() => setActiveTab('stories')}
+            className={`w-full flex items-center justify-between p-4 rounded-2xl font-bold transition-all ${activeTab === 'stories' ? 'bg-primary text-white shadow-lg' : 'text-white/60 hover:text-white hover:bg-white/5'}`}
+          >
+            <div className="flex items-center gap-3"><Trophy size={20} /> Success Stories</div>
+            {activeTab === 'stories' && <div className="w-2 h-2 bg-white rounded-full" />}
+          </button>
+
+          <button 
+            onClick={() => setActiveTab('settings')}
+            className={`w-full flex items-center justify-between p-4 rounded-2xl font-bold transition-all ${activeTab === 'settings' ? 'bg-primary text-white shadow-lg' : 'text-white/60 hover:text-white hover:bg-white/5'}`}
+          >
+            <div className="flex items-center gap-3"><Settings size={20} /> Settings</div>
+            {activeTab === 'settings' && <div className="w-2 h-2 bg-white rounded-full" />}
           </button>
         </nav>
 
@@ -285,7 +301,114 @@ export default function AdminDashboard() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-grow p-8 lg:p-12 overflow-y-auto max-h-screen">
+      <main className="flex-grow p-6 md:p-8 lg:p-12 overflow-y-auto max-h-screen">
+        {/* Mobile Tab Row Navigation */}
+        <div className="lg:hidden mb-8 border-b border-gray-200 pb-4">
+          <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-none snap-x select-none">
+            <button
+              onClick={() => setActiveTab('blogs')}
+              className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold shrink-0 transition-all ${
+                activeTab === 'blogs'
+                  ? 'bg-primary text-white shadow-md shadow-primary/10'
+                  : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'
+              }`}
+            >
+              Blogs
+            </button>
+            <button
+              onClick={() => setActiveTab('contacts')}
+              className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold shrink-0 transition-all relative ${
+                activeTab === 'contacts'
+                  ? 'bg-primary text-white shadow-md shadow-primary/10'
+                  : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'
+              }`}
+            >
+              Contacts
+              {contacts.filter(c => c.status === 'new').length > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] w-5 h-5 flex items-center justify-center rounded-full font-bold">
+                  {contacts.filter(c => c.status === 'new').length}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => setActiveTab('applications')}
+              className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold shrink-0 transition-all relative ${
+                activeTab === 'applications'
+                  ? 'bg-primary text-white shadow-md shadow-primary/10'
+                  : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'
+              }`}
+            >
+              Applications
+              {applications.filter(a => a.status === 'pending').length > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] w-5 h-5 flex items-center justify-center rounded-full font-bold">
+                  {applications.filter(a => a.status === 'pending').length}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => setActiveTab('leads')}
+              className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold shrink-0 transition-all relative ${
+                activeTab === 'leads'
+                  ? 'bg-primary text-white shadow-md shadow-primary/10'
+                  : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'
+              }`}
+            >
+              Mock Leadin
+              {leads.filter(l => l.status === 'new').length > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] w-5 h-5 flex items-center justify-center rounded-full font-bold">
+                  {leads.filter(l => l.status === 'new').length}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => setActiveTab('veo')}
+              className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold shrink-0 transition-all ${
+                activeTab === 'veo'
+                  ? 'bg-primary text-white shadow-md shadow-primary/10'
+                  : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'
+              }`}
+            >
+              Veo Studio <span className="text-[8px] bg-slate-100/80 text-primary rounded px-1 ml-1 font-black">AI</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('gallery')}
+              className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold shrink-0 transition-all ${
+                activeTab === 'gallery'
+                  ? 'bg-primary text-white shadow-md shadow-primary/10'
+                  : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'
+              }`}
+            >
+              Gallery
+            </button>
+            <button
+              onClick={() => setActiveTab('stories')}
+              className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold shrink-0 transition-all ${
+                activeTab === 'stories'
+                  ? 'bg-primary text-white shadow-md shadow-primary/10'
+                  : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'
+              }`}
+            >
+              Success Stories
+            </button>
+            <button
+              onClick={() => setActiveTab('settings')}
+              className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold shrink-0 transition-all ${
+                activeTab === 'settings'
+                  ? 'bg-primary text-white shadow-md shadow-primary/10'
+                  : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'
+              }`}
+            >
+              Settings
+            </button>
+            <button
+              onClick={() => logout()}
+              className="px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold shrink-0 transition-all bg-red-50 hover:bg-red-100 text-red-650 border border-red-200"
+            >
+              Logout
+            </button>
+          </div>
+        </div>
+
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
           <div>
             <h1 className="text-4xl font-extrabold text-accent capitalize">
@@ -294,7 +417,9 @@ export default function AdminDashboard() {
                activeTab === 'applications' ? 'Online Applications' : 
                activeTab === 'leads' ? 'Mock Test Leads' : 
                activeTab === 'veo' ? 'Veo Promo Studio' : 
-               'Campus Gallery Manager'}
+               activeTab === 'gallery' ? 'Campus Gallery Manager' : 
+               activeTab === 'stories' ? 'Success Stories Manager' :
+               'Global Site Settings'}
             </h1>
             <p className="text-gray-500 mt-2">
               {activeTab === 'blogs' ? 'Create, edit and manage your website articles.' : 
@@ -302,7 +427,9 @@ export default function AdminDashboard() {
                activeTab === 'applications' ? 'Review and process student school applications.' : 
                activeTab === 'leads' ? 'Students who completed language mock tests.' : 
                activeTab === 'veo' ? 'AI-powered video generation for promotional content.' : 
-               'Add or remove photos from the "Life at Language World" section.'}
+               activeTab === 'gallery' ? 'Add or remove photos from the "Life at Language World" section.' : 
+               activeTab === 'stories' ? 'Manage student certificates and achievements.' :
+               'Customize your branding, images, and global website content.'}
               <span className="block mt-1 text-[10px] opacity-50">Admin: {user?.email}</span>
             </p>
           </div>
@@ -339,7 +466,14 @@ export default function AdminDashboard() {
                 <EmptyState icon={<FileText size={60} />} title="No blogs yet" link="/admin/blogs/new" />
               ) : (
                 blogs.map((blog) => (
-                  <BlogRow key={blog.id} blog={blog} onDelete={handleDeleteBlog} />
+                  <BlogRow 
+                    key={blog.id} 
+                    blog={blog} 
+                    isConfirming={confirmDeleteId === String(blog.id)}
+                    onDeleteClick={() => setConfirmDeleteId(String(blog.id))}
+                    onCancelDelete={() => setConfirmDeleteId(null)}
+                    onDelete={() => handleDeleteBlog(String(blog.id))} 
+                  />
                 ))
               )
             )}
@@ -352,6 +486,9 @@ export default function AdminDashboard() {
                   <ContactRow 
                     key={contact.id} 
                     contact={contact} 
+                    isConfirming={confirmDeleteId === contact.id}
+                    onDeleteClick={() => setConfirmDeleteId(contact.id)}
+                    onCancelDelete={() => setConfirmDeleteId(null)}
                     onStatusUpdate={(s) => handleUpdateStatus('contacts', contact.id, s)}
                     onDelete={() => handleDeleteItem('contacts', contact.id)}
                   />
@@ -367,6 +504,9 @@ export default function AdminDashboard() {
                   <AppRow 
                     key={app.id} 
                     app={app} 
+                    isConfirming={confirmDeleteId === app.id}
+                    onDeleteClick={() => setConfirmDeleteId(app.id)}
+                    onCancelDelete={() => setConfirmDeleteId(null)}
                     onStatusUpdate={(s) => handleUpdateStatus('applications', app.id, s)}
                     onDelete={() => handleDeleteItem('applications', app.id)}
                   />
@@ -382,6 +522,9 @@ export default function AdminDashboard() {
                   <LeadRow 
                     key={lead.id} 
                     lead={lead} 
+                    isConfirming={confirmDeleteId === lead.id}
+                    onDeleteClick={() => setConfirmDeleteId(lead.id)}
+                    onCancelDelete={() => setConfirmDeleteId(null)}
                     onStatusUpdate={(s) => handleUpdateStatus('leads', lead.id, s)}
                     onDelete={() => handleDeleteItem('leads', lead.id)}
                   />
@@ -396,6 +539,14 @@ export default function AdminDashboard() {
             {activeTab === 'gallery' && (
               <GalleryManager />
             )}
+
+            {activeTab === 'stories' && (
+              <SuccessStoriesManager />
+            )}
+
+            {activeTab === 'settings' && (
+              <SiteSettingsManager />
+            )}
           </div>
         )}
       </main>
@@ -403,7 +554,7 @@ export default function AdminDashboard() {
   );
 }
 
-function LeadRow({ lead, onStatusUpdate, onDelete }: any) {
+function LeadRow({ lead, onStatusUpdate, onDelete, isConfirming, onDeleteClick, onCancelDelete }: any) {
   const date = lead.createdAt?.toDate ? lead.createdAt.toDate().toLocaleDateString() : 'Just now';
   
   return (
@@ -430,24 +581,46 @@ function LeadRow({ lead, onStatusUpdate, onDelete }: any) {
             <div className="flex items-center gap-2 text-sm text-gray-600 font-black">Score: <span className="text-primary">{lead.score || 'N/A'}</span></div>
           </div>
         </div>
-        <div className="flex flex-row lg:flex-col gap-3 min-w-[200px]">
-          <button 
-            onClick={() => onStatusUpdate(lead.status === 'new' ? 'contacted' : 'new')}
-            className="flex-grow btn-outline py-3 text-xs bg-white"
-          >
-            Mark as {lead.status === 'new' ? 'Contacted' : 'New'}
-          </button>
-          <a href={`https://wa.me/${lead.phone.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="flex-grow btn-accent py-3 text-xs flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 border-none">
-            WhatsApp <MessageSquare size={14} />
-          </a>
-          <button 
-            type="button"
-            onClick={onDelete} 
-            className="p-4 bg-red-50 text-red-600 rounded-2xl hover:bg-red-600 hover:text-white transition-all flex items-center justify-center cursor-pointer min-w-[60px] min-h-[60px] border border-red-200 relative z-20"
-            title="Delete permanently"
-          >
-            <Trash2 size={24} />
-          </button>
+        <div className="flex flex-row lg:flex-col gap-3 min-w-[200px] justify-center">
+          {isConfirming ? (
+            <div className="flex flex-col gap-2 w-full p-3 bg-red-50 border border-red-200 rounded-3xl text-center self-center justify-center">
+              <span className="text-[10px] text-red-600 font-black uppercase tracking-wider block">Delete permanently?</span>
+              <div className="flex gap-2">
+                <button 
+                  onClick={onDelete} 
+                  className="flex-grow py-2 px-3 bg-red-600 hover:bg-red-700 text-white text-[10px] font-black rounded-xl transition-all cursor-pointer"
+                >
+                  Confirm
+                </button>
+                <button 
+                  onClick={onCancelDelete} 
+                  className="py-2 px-3 bg-gray-200 hover:bg-gray-300 text-gray-700 text-[10px] font-black rounded-xl transition-all cursor-pointer"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <button 
+                onClick={() => onStatusUpdate(lead.status === 'new' ? 'contacted' : 'new')}
+                className="flex-grow btn-outline py-3 text-xs bg-white"
+              >
+                Mark as {lead.status === 'new' ? 'Contacted' : 'New'}
+              </button>
+              <a href={`https://wa.me/${lead.phone.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="flex-grow btn-accent py-3 text-xs flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 border-none">
+                WhatsApp <MessageSquare size={14} />
+              </a>
+              <button 
+                type="button"
+                onClick={onDeleteClick} 
+                className="p-4 bg-red-50 text-red-600 rounded-2xl hover:bg-red-600 hover:text-white transition-all flex items-center justify-center cursor-pointer min-w-[60px] min-h-[60px] border border-red-200 relative z-20"
+                title="Delete permanently"
+              >
+                <Trash2 size={24} />
+              </button>
+            </>
+          )}
         </div>
       </div>
     </motion.div>
@@ -468,14 +641,22 @@ function EmptyState({ icon, title, link }: any) {
   );
 }
 
-function BlogRow({ blog, onDelete }: any) {
+function BlogRow({ blog, onDelete, isConfirming, onDeleteClick, onCancelDelete }: any) {
   return (
     <motion.div 
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
       className="bg-white p-6 rounded-[2rem] shadow-sm hover:shadow-md transition-all flex flex-col md:flex-row items-center gap-8 group"
     >
-      <img src={blog.image} alt={blog.title} className="w-full md:w-48 h-32 object-cover rounded-2xl" referrerPolicy="no-referrer" />
+      <img 
+        src={blog.image || "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&q=80&w=800"} 
+        alt={blog.title} 
+        className="w-full md:w-48 h-32 object-cover rounded-2xl" 
+        referrerPolicy="no-referrer" 
+        onError={(e) => {
+          e.currentTarget.src = "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&q=80&w=800";
+        }}
+      />
       <div className="flex-grow">
         <div className="flex items-center gap-3 mb-2">
           <span className="text-[10px] font-bold uppercase tracking-widest bg-soft-gray px-2 py-1 rounded-md text-gray-500">{blog.tag}</span>
@@ -483,22 +664,42 @@ function BlogRow({ blog, onDelete }: any) {
         <h3 className="text-xl font-bold text-accent group-hover:text-primary transition-colors">{blog.title}</h3>
         <p className="text-sm text-gray-500 line-clamp-1 mt-1">{blog.excerpt}</p>
       </div>
-      <div className="flex gap-2 w-full md:w-auto">
-        <Link to={`/blog/${blog.id}`} target="_blank" className="flex-grow md:flex-none p-3 bg-soft-gray text-gray-500 rounded-xl hover:bg-primary/10 hover:text-primary transition-all">
-          <ExternalLink size={20} />
-        </Link>
-        <Link to={`/admin/blogs/edit/${blog.id}`} className="flex-grow md:flex-none p-3 bg-soft-gray text-gray-500 rounded-xl hover:bg-accent hover:text-white transition-all">
-          <Edit3 size={20} />
-        </Link>
-        <button onClick={() => onDelete(blog.id as any)} className="flex-grow md:flex-none p-3 bg-soft-gray text-gray-500 rounded-xl hover:bg-red-500 hover:text-white transition-all">
-          <Trash2 size={20} />
-        </button>
+      <div className="flex gap-2 w-full md:w-auto items-center">
+        {isConfirming ? (
+          <div className="flex items-center gap-2 p-2 bg-red-50 border border-red-200 rounded-2xl">
+            <span className="text-[10px] text-red-600 font-extrabold uppercase tracking-widest px-1">Delete permanently?</span>
+            <button 
+              onClick={() => onDelete(blog.id)} 
+              className="py-2 px-3 bg-red-600 hover:bg-red-700 text-white text-[10px] font-black rounded-lg transition-all cursor-pointer"
+            >
+              Confirm
+            </button>
+            <button 
+              onClick={onCancelDelete} 
+              className="py-2 px-3 bg-gray-200 hover:bg-gray-300 text-gray-700 text-[10px] font-black rounded-lg transition-all cursor-pointer"
+            >
+              Cancel
+            </button>
+          </div>
+        ) : (
+          <>
+            <Link to={`/blog/${blog.id}`} target="_blank" className="flex-grow md:flex-none p-3 bg-soft-gray text-gray-500 rounded-xl hover:bg-primary/10 hover:text-primary transition-all">
+              <ExternalLink size={20} />
+            </Link>
+            <Link to={`/admin/blogs/edit/${blog.id}`} className="flex-grow md:flex-none p-3 bg-soft-gray text-gray-500 rounded-xl hover:bg-accent hover:text-white transition-all">
+              <Edit3 size={20} />
+            </Link>
+            <button onClick={onDeleteClick} className="flex-grow md:flex-none p-3 bg-soft-gray text-gray-500 rounded-xl hover:bg-red-500 hover:text-white transition-all">
+              <Trash2 size={20} />
+            </button>
+          </>
+        )}
       </div>
     </motion.div>
   );
 }
 
-function ContactRow({ contact, onStatusUpdate, onDelete }: any) {
+function ContactRow({ contact, onStatusUpdate, onDelete, isConfirming, onDeleteClick, onCancelDelete }: any) {
   const date = contact.createdAt?.toDate ? contact.createdAt.toDate().toLocaleDateString() : 'Just now';
   
   return (
@@ -525,31 +726,53 @@ function ContactRow({ contact, onStatusUpdate, onDelete }: any) {
             "{contact.message}"
           </div>
         </div>
-        <div className="flex flex-row lg:flex-col gap-3 min-w-[200px]">
-          <button 
-            onClick={() => onStatusUpdate(contact.status === 'new' ? 'read' : 'new')}
-            className="flex-grow btn-outline py-3 text-xs bg-white"
-          >
-            Mark as {contact.status === 'new' ? 'Read' : 'New'}
-          </button>
-          <a href={`mailto:${contact.email}`} className="flex-grow btn-accent py-3 text-xs flex items-center justify-center gap-2">
-            Reply Email <ArrowRight size={14} />
-          </a>
-          <button 
-            type="button"
-            onClick={onDelete} 
-            className="p-4 bg-red-50 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all flex items-center justify-center cursor-pointer relative z-20"
-            title="Delete Inquiry"
-          >
-            <Trash2 size={20} />
-          </button>
+        <div className="flex flex-row lg:flex-col gap-3 min-w-[200px] justify-center">
+          {isConfirming ? (
+            <div className="flex flex-col gap-2 w-full p-3 bg-red-50 border border-red-200 rounded-3xl text-center self-center justify-center">
+              <span className="text-[10px] text-red-600 font-black uppercase tracking-wider block">Delete inquiry?</span>
+              <div className="flex gap-2">
+                <button 
+                  onClick={onDelete} 
+                  className="flex-grow py-2 px-3 bg-red-600 hover:bg-red-700 text-white text-[10px] font-black rounded-xl transition-all cursor-pointer"
+                >
+                  Confirm
+                </button>
+                <button 
+                  onClick={onCancelDelete} 
+                  className="py-2 px-3 bg-gray-200 hover:bg-gray-300 text-gray-700 text-[10px] font-black rounded-xl transition-all cursor-pointer"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <button 
+                onClick={() => onStatusUpdate(contact.status === 'new' ? 'read' : 'new')}
+                className="flex-grow btn-outline py-3 text-xs bg-white"
+              >
+                Mark as {contact.status === 'new' ? 'Read' : 'New'}
+              </button>
+              <a href={`mailto:${contact.email}`} className="flex-grow btn-accent py-3 text-xs flex items-center justify-center gap-2">
+                Reply Email <ArrowRight size={14} />
+              </a>
+              <button 
+                type="button"
+                onClick={onDeleteClick} 
+                className="p-4 bg-red-50 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all flex items-center justify-center cursor-pointer relative z-20"
+                title="Delete Inquiry"
+              >
+                <Trash2 size={20} />
+              </button>
+            </>
+          )}
         </div>
       </div>
     </motion.div>
   );
 }
 
-function AppRow({ app, onStatusUpdate, onDelete }: any) {
+function AppRow({ app, onStatusUpdate, onDelete, isConfirming, onDeleteClick, onCancelDelete }: any) {
   const date = app.createdAt?.toDate ? app.createdAt.toDate().toLocaleDateString() : 'Just now';
   
   const statusColors: any = {
@@ -594,18 +817,40 @@ function AppRow({ app, onStatusUpdate, onDelete }: any) {
             </div>
           )}
         </div>
-        <div className="flex flex-wrap lg:grid lg:grid-cols-2 gap-3 min-w-[240px]">
-          <button onClick={() => onStatusUpdate('contacted')} className="btn-outline py-3 text-[10px] bg-white">Contacted</button>
-          <button onClick={() => onStatusUpdate('enrolled')} className="btn-accent py-3 text-[10px]">Enroll</button>
-          <button onClick={() => onStatusUpdate('rejected')} className="btn-outline py-3 text-[10px] border-red-200 text-red-400 hover:bg-red-500">Reject</button>
-          <button 
-            type="button"
-            onClick={onDelete} 
-            className="p-4 bg-red-50 text-red-400 rounded-xl hover:bg-red-500 hover:text-white transition-all flex items-center justify-center cursor-pointer relative z-20"
-            title="Delete Application"
-          >
-            <Trash2 size={20} />
-          </button>
+        <div className="flex flex-wrap lg:grid lg:grid-cols-2 gap-3 min-w-[240px] items-center justify-center">
+          {isConfirming ? (
+            <div className="col-span-2 flex flex-col gap-2 w-full p-3 bg-red-50 border border-red-200 rounded-3xl text-center">
+              <span className="text-[10px] text-red-600 font-black uppercase tracking-wider block">Delete Application?</span>
+              <div className="flex gap-2">
+                <button 
+                  onClick={onDelete} 
+                  className="flex-grow py-2 px-3 bg-red-600 hover:bg-red-700 text-white text-[10px] font-black rounded-xl transition-all cursor-pointer"
+                >
+                  Confirm
+                </button>
+                <button 
+                  onClick={onCancelDelete} 
+                  className="py-2 px-3 bg-gray-200 hover:bg-gray-300 text-gray-700 text-[10px] font-black rounded-xl transition-all cursor-pointer"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <button onClick={() => onStatusUpdate('contacted')} className="btn-outline py-3 text-[10px] bg-white">Contacted</button>
+              <button onClick={() => onStatusUpdate('enrolled')} className="btn-accent py-3 text-[10px]">Enroll</button>
+              <button onClick={() => onStatusUpdate('rejected')} className="btn-outline py-3 text-[10px] border-red-200 text-red-400 hover:bg-red-500">Reject</button>
+              <button 
+                type="button"
+                onClick={onDeleteClick} 
+                className="p-4 bg-red-50 text-red-400 rounded-xl hover:bg-red-500 hover:text-white transition-all flex items-center justify-center cursor-pointer relative z-20"
+                title="Delete Application"
+              >
+                <Trash2 size={20} />
+              </button>
+            </>
+          )}
         </div>
       </div>
     </motion.div>
