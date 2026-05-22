@@ -404,30 +404,242 @@ export default function GermanMockTest() {
   };
 
   const downloadPDF = async () => {
-    if (!reportRef.current || isDownloading) return;
+    if (isDownloading) return;
     
     try {
       setIsDownloading(true);
-      await new Promise(resolve => setTimeout(resolve, 500));
       
-      const canvas = await html2canvas(reportRef.current, {
-        scale: 1.5,
-        useCORS: true,
-        logging: false,
-        allowTaint: true,
-        backgroundColor: '#ffffff'
+      // Initialize a standard A4 portrait PDF (210mm x 297mm)
+      const doc = new jsPDF('p', 'mm', 'a4');
+      const pageWidth = doc.internal.pageSize.getWidth(); // 210
+      const pageHeight = doc.internal.pageSize.getHeight(); // 297
+      
+      // Theme colors
+      const colorDarkBlue = [15, 23, 42];  // #0f172a (sleek slate)
+      const colorGold = [255, 206, 0];    // #FFCE00 (Language World Gold)
+      const colorGray = [100, 116, 139];   // slate gray
+      const colorLightGray = [248, 250, 252]; // fine off-white secondary panels
+      
+      // Helper to draw horizontal lines
+      const drawLine = (y: number) => {
+        doc.setDrawColor(226, 232, 240); // tailwind slate-200
+        doc.setLineWidth(0.5);
+        doc.line(15, y, pageWidth - 15, y);
+      };
+
+      // 1. BRANDING HEADER
+      // Top luxury bar (Accent gold line)
+      doc.setFillColor(colorGold[0], colorGold[1], colorGold[2]);
+      doc.rect(0, 0, pageWidth, 6, 'F');
+      
+      // Main title "LANGUAGE WORLD"
+      doc.setFont('Helvetica', 'bold');
+      doc.setFontSize(22);
+      doc.setTextColor(colorDarkBlue[0], colorDarkBlue[1], colorDarkBlue[2]);
+      doc.text("LANGUAGE WORLD", 15, 22);
+      
+      // Subtitle tagline
+      doc.setFont('Helvetica', 'normal');
+      doc.setFontSize(9);
+      doc.setTextColor(colorGray[0], colorGray[1], colorGray[2]);
+      doc.text("Pakistan's Premier German Language & Exam Preparation Institute", 15, 27);
+      
+      // Document identifier on right
+      doc.setFont('Helvetica', 'bold');
+      doc.setFontSize(10);
+      doc.setTextColor(colorDarkBlue[0], colorDarkBlue[1], colorDarkBlue[2]);
+      doc.text("OFFICIAL REPORT", pageWidth - 15, 22, { align: 'right' });
+      
+      doc.setFont('Helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.setTextColor(colorGray[0], colorGray[1], colorGray[2]);
+      const todayDate = new Date().toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric'
       });
+      doc.text(`Date of Issue: ${todayDate}`, pageWidth - 15, 27, { align: 'right' });
       
-      const imgData = canvas.toDataURL('image/png', 1.0);
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      drawLine(33);
       
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
-      pdf.save(`German_Report_${leadData.name || 'Student'}.pdf`);
+      // 2. CANDIDATE PROFILE & TEST OVERVIEW (Grid Layout)
+      doc.setFillColor(colorLightGray[0], colorLightGray[1], colorLightGray[2]);
+      doc.roundedRect(15, 38, pageWidth - 30, 32, 4, 4, 'F');
+      
+      doc.setFont('Helvetica', 'bold');
+      doc.setFontSize(10);
+      doc.setTextColor(colorDarkBlue[0], colorDarkBlue[1], colorDarkBlue[2]);
+      doc.text("CANDIDATE DOSSIER", 20, 45);
+      
+      doc.setFont('Helvetica', 'normal');
+      doc.setFontSize(9);
+      doc.text(`Full Name:      ${leadData.name || 'Anonymous Learner'}`, 20, 52);
+      doc.text(`Email Address:  ${leadData.email || 'N/A'}`, 20, 58);
+      doc.text(`Contact Phone:  ${leadData.phone || 'N/A'}`, 20, 64);
+      
+      doc.setFont('Helvetica', 'bold');
+      doc.text("TEST SPECIFICATIONS", 120, 45);
+      doc.setFont('Helvetica', 'normal');
+      doc.text("Subject:           German Language Evaluation", 120, 52);
+      doc.text("Format:          Dynamic Placement Assessment", 120, 58);
+      doc.text("Proctor:          Pakistan's First German AI Tutor", 120, 64);
+
+      // 3. MAIN SCORE CIRCLE & CERTIFICATION DISPLAY
+      const scoreY = 78;
+      doc.setFillColor(colorDarkBlue[0], colorDarkBlue[1], colorDarkBlue[2]);
+      doc.roundedRect(15, scoreY, pageWidth - 30, 40, 6, 6, 'F');
+      
+      // Gold accent block under total score badge
+      doc.setFillColor(colorGold[0], colorGold[1], colorGold[2]);
+      doc.rect(15, scoreY + 38, pageWidth - 30, 2, 'F');
+      
+      doc.setFont('Helvetica', 'bold');
+      doc.setFontSize(11);
+      doc.setTextColor(255, 255, 255);
+      doc.text("EVALUATED CEFR LEVEL COMPETENCY", 25, scoreY + 15);
+      
+      doc.setFont('Helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.setTextColor(180, 180, 180);
+      doc.text("Your answers were run against complete lexical, grammar, reading,", 25, scoreY + 22);
+      doc.text("and speaking templates according to standard Goethe-Zertifikat grading criteria.", 25, scoreY + 26);
+      
+      // Big bold CEFR Indicator badge
+      doc.setFillColor(colorGold[0], colorGold[1], colorGold[2]);
+      doc.circle(pageWidth - 35, scoreY + 20, 14, 'F');
+      
+      doc.setFont('Helvetica', 'bold');
+      doc.setFontSize(20);
+      doc.setTextColor(colorDarkBlue[0], colorDarkBlue[1], colorDarkBlue[2]);
+      doc.text(results?.score || "A1", pageWidth - 35, scoreY + 22, { align: 'center' });
+      
+      doc.setFont('Helvetica', 'bold');
+      doc.setFontSize(7);
+      doc.setTextColor(colorDarkBlue[0], colorDarkBlue[1], colorDarkBlue[2]);
+      doc.text("CEFR", pageWidth - 35, scoreY + 12, { align: 'center' });
+
+      // 4. MODULE FEEDBACK SECTION
+      let currentY = 126;
+      doc.setFont('Helvetica', 'bold');
+      doc.setFontSize(12);
+      doc.setTextColor(colorDarkBlue[0], colorDarkBlue[1], colorDarkBlue[2]);
+      doc.text("MODULE-WISE PERFORMANCE ANALYSIS", 15, currentY);
+      currentY += 6;
+      
+      if (results?.feedback) {
+        Object.entries(results.feedback).forEach(([moduleName, notes]: [string, any]) => {
+          // If the text overflows page height, insert new page
+          if (currentY + 36 > pageHeight - 30) {
+            doc.addPage();
+            // Reprint thin top brand line on next page
+            doc.setFillColor(colorGold[0], colorGold[1], colorGold[2]);
+            doc.rect(0, 0, pageWidth, 4, 'F');
+            currentY = 20;
+          }
+          
+          doc.setFillColor(248, 250, 252); // Tailwind slate-50 background for feedback cards
+          doc.roundedRect(15, currentY, pageWidth - 30, 26, 3, 3, 'F');
+          
+          // Draw thin left gold stripe on feedback card
+          doc.setFillColor(colorGold[0], colorGold[1], colorGold[2]);
+          doc.rect(15, currentY, 2.5, 26, 'F');
+          
+          doc.setFont('Helvetica', 'bold');
+          doc.setFontSize(9);
+          doc.setTextColor(colorDarkBlue[0], colorDarkBlue[1], colorDarkBlue[2]);
+          doc.text(moduleName.toUpperCase(), 21, currentY + 6);
+          
+          doc.setFont('Helvetica', 'normal');
+          doc.setFontSize(8.5);
+          doc.setTextColor(51, 65, 85); // dark charcoal text
+          
+          // Auto wrap feedback text
+          const splitText = doc.splitTextToSize(String(notes), pageWidth - 42);
+          doc.text(splitText, 21, currentY + 11.5);
+          
+          currentY += 30;
+        });
+      }
+
+      // 5. IMPROVEMENT RECOMMENDATIONS SECTION
+      if (results?.improvement) {
+        if (currentY + 45 > pageHeight - 30) {
+          doc.addPage();
+          doc.setFillColor(colorGold[0], colorGold[1], colorGold[2]);
+          doc.rect(0, 0, pageWidth, 4, 'F');
+          currentY = 20;
+        }
+        
+        doc.setFont('Helvetica', 'bold');
+        doc.setFontSize(12);
+        doc.setTextColor(colorDarkBlue[0], colorDarkBlue[1], colorDarkBlue[2]);
+        doc.text("EXPERT ROADMAP & SUGGESTED ACTION ITEMS", 15, currentY);
+        currentY += 6;
+        
+        doc.setFillColor(254, 253, 246); // Tailwind yellow-50
+        doc.setDrawColor(254, 240, 138); // Tailwind yellow-200
+        doc.setLineWidth(0.5);
+        
+        // Auto wrap improvement text first to calculate card height
+        const wrappedImprovement = doc.splitTextToSize(results.improvement, pageWidth - 40);
+        const cardHeight = Math.max(wrappedImprovement.length * 4.2 + 10, 25);
+        
+        doc.roundedRect(15, currentY, pageWidth - 30, cardHeight, 4, 4, 'FD');
+        
+        doc.setFont('Helvetica', 'bold');
+        doc.setFontSize(8);
+        doc.setTextColor(133, 77, 14); // Dark yellow label
+        doc.text("AI TUTOR DEVELOPMENTAL ADVICE", 20, currentY + 6);
+        
+        doc.setFont('Helvetica', 'normal');
+        doc.setFontSize(8.5);
+        doc.setTextColor(51, 65, 85);
+        doc.text(wrappedImprovement, 20, currentY + 12.5);
+        
+        currentY += cardHeight + 10;
+      }
+
+      // 6. OFFICIAL FOOTER / STAMP (Always visible at the bottom of the current page)
+      const footerY = pageHeight - 25;
+      drawLine(footerY - 2);
+      
+      doc.setFont('Helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.setTextColor(colorGray[0], colorGray[1], colorGray[2]);
+      doc.text("Official evaluation copy generated by Language World Karachi. Broaden your global communication gates.", 15, footerY + 3);
+      doc.text("To verify or check upcoming physical batches near NIPA, visit: thelanguageworld.com", 15, footerY + 7);
+      
+      // Stamp Badge on bottom right
+      doc.setFont('Helvetica', 'bold');
+      doc.setFontSize(8);
+      doc.setTextColor(colorDarkBlue[0], colorDarkBlue[1], colorDarkBlue[2]);
+      doc.text("LANGUAGE WORLD CERTIFIED", pageWidth - 15, footerY + 3, { align: 'right' });
+      doc.setFont('Helvetica', 'normal');
+      doc.text("AUTHENTIC COPY", pageWidth - 15, footerY + 7, { align: 'right' });
+
+      // Save document
+      doc.save(`German_Placement_Report_${leadData.name || 'Student'}.pdf`);
     } catch (error) {
       console.error("PDF Generation Error:", error);
-      alert("Es gab ein Problem beim Erstellen Ihres PDFs. Bitte versuchen Sie es erneut.");
+      // Clean fallback: Try simple screenshotting with html2canvas as backup!
+      try {
+        if (reportRef.current) {
+          const canvas = await html2canvas(reportRef.current, {
+            scale: 1.5,
+            useCORS: true,
+            logging: false,
+            backgroundColor: '#ffffff'
+          });
+          const imgData = canvas.toDataURL('image/png', 1.0);
+          const pdf = new jsPDF('p', 'mm', 'a4');
+          const pdfWidth = pdf.internal.pageSize.getWidth();
+          const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+          pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
+          pdf.save(`German_Report_${leadData.name || 'Student'}.pdf`);
+        }
+      } catch (backupError) {
+        console.error("Backup PDF generation failed:", backupError);
+      }
     } finally {
       setIsDownloading(false);
     }

@@ -19,7 +19,8 @@ import {
   Users,
   Video,
   Image as ImageIcon,
-  Trophy
+  Trophy,
+  BarChart2
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
@@ -32,15 +33,16 @@ import VeoStudio from "../../components/admin/VeoStudio";
 import GalleryManager from "../../components/admin/GalleryManager";
 import SuccessStoriesManager from "./SuccessStoriesManager";
 import SiteSettingsManager from "../../components/admin/SiteSettingsManager";
+import DashboardStats from "../../components/admin/DashboardStats";
 import { collection, query, orderBy, onSnapshot, doc, updateDoc, deleteDoc, writeBatch, getDocs, serverTimestamp } from "firebase/firestore";
 
-type AdminTab = 'blogs' | 'contacts' | 'applications' | 'leads' | 'veo' | 'gallery' | 'stories' | 'settings';
+type AdminTab = 'stats' | 'blogs' | 'contacts' | 'applications' | 'leads' | 'veo' | 'gallery' | 'stories' | 'settings';
 
 export default function AdminDashboard() {
   const { user, isAdmin, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   
-  const [activeTab, setActiveTab] = useState<AdminTab>('blogs');
+  const [activeTab, setActiveTab] = useState<AdminTab>('stats');
   const [blogs, setBlogs] = useState<BlogPost[]>([]);
   const [contacts, setContacts] = useState<any[]>([]);
   const [applications, setApplications] = useState<any[]>([]);
@@ -163,7 +165,7 @@ export default function AdminDashboard() {
 
     if (activeTab === 'blogs') {
       fetchBlogs();
-    } else if (activeTab === 'veo' || activeTab === 'gallery' || activeTab === 'stories' || activeTab === 'settings') {
+    } else if (activeTab === 'stats' || activeTab === 'veo' || activeTab === 'gallery' || activeTab === 'stories' || activeTab === 'settings') {
       setLoading(false);
     }
 
@@ -221,6 +223,14 @@ export default function AdminDashboard() {
         </div>
 
         <nav className="flex-grow space-y-2">
+          <button 
+            onClick={() => setActiveTab('stats')}
+            className={`w-full flex items-center justify-between p-4 rounded-2xl font-bold transition-all ${activeTab === 'stats' ? 'bg-primary text-white shadow-lg' : 'text-white/60 hover:text-white hover:bg-white/5'}`}
+          >
+            <div className="flex items-center gap-3"><BarChart2 size={20} /> Dashboard Stats</div>
+            {activeTab === 'stats' && <div className="w-2 h-2 bg-white rounded-full" />}
+          </button>
+
           <button 
             onClick={() => setActiveTab('blogs')}
             className={`w-full flex items-center justify-between p-4 rounded-2xl font-bold transition-all ${activeTab === 'blogs' ? 'bg-primary text-white shadow-lg' : 'text-white/60 hover:text-white hover:bg-white/5'}`}
@@ -305,6 +315,16 @@ export default function AdminDashboard() {
         {/* Mobile Tab Row Navigation */}
         <div className="lg:hidden mb-8 border-b border-gray-200 pb-4">
           <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-none snap-x select-none">
+            <button
+              onClick={() => setActiveTab('stats')}
+              className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold shrink-0 transition-all ${
+                activeTab === 'stats'
+                  ? 'bg-primary text-white shadow-md shadow-primary/10'
+                  : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'
+              }`}
+            >
+              Stats
+            </button>
             <button
               onClick={() => setActiveTab('blogs')}
               className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold shrink-0 transition-all ${
@@ -412,7 +432,8 @@ export default function AdminDashboard() {
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
           <div>
             <h1 className="text-4xl font-extrabold text-accent capitalize">
-              {activeTab === 'blogs' ? 'Blog Management' : 
+              {activeTab === 'stats' ? 'Analytics Insights' :
+               activeTab === 'blogs' ? 'Blog Management' : 
                activeTab === 'contacts' ? 'Course General Inquiries' : 
                activeTab === 'applications' ? 'Online Applications' : 
                activeTab === 'leads' ? 'Mock Test Leads' : 
@@ -422,7 +443,8 @@ export default function AdminDashboard() {
                'Global Site Settings'}
             </h1>
             <p className="text-gray-500 mt-2">
-              {activeTab === 'blogs' ? 'Create, edit and manage your website articles.' : 
+              {activeTab === 'stats' ? 'Track historical metrics, user conversions, and dynamic language evaluator traction.' :
+               activeTab === 'blogs' ? 'Create, edit and manage your website articles.' : 
                activeTab === 'contacts' ? 'Manage questions from Contact Us form.' : 
                activeTab === 'applications' ? 'Review and process student school applications.' : 
                activeTab === 'leads' ? 'Students who completed language mock tests.' : 
@@ -512,6 +534,10 @@ export default function AdminDashboard() {
                   />
                 ))
               )
+            )}
+
+            {activeTab === 'stats' && (
+              <DashboardStats applications={applications} leads={leads} contacts={contacts} />
             )}
 
             {activeTab === 'leads' && (
