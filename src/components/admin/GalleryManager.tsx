@@ -54,10 +54,15 @@ export default function GalleryManager() {
           }
 
           // Draw image on canvas
+          ctx.clearRect(0, 0, width, height);
           ctx.drawImage(img, 0, 0, width, height);
           
           // Get compressed data url
-          const dataUrl = canvas.toDataURL('image/jpeg', quality);
+          // Preserve transparency for PNG and WebP files to prevent black backgrounds
+          const isTransparent = file.type === 'image/png' || file.type === 'image/webp' || file.type === 'image/svg+xml' || file.name?.endsWith('.png') || file.name?.endsWith('.svg');
+          const outputType = isTransparent ? 'image/png' : 'image/jpeg';
+          
+          const dataUrl = canvas.toDataURL(outputType, quality);
           resolve(dataUrl);
         };
         img.onerror = () => reject(new Error("Failed to load image object"));

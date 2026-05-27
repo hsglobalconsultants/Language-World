@@ -20,7 +20,8 @@ import {
   Video,
   Image as ImageIcon,
   Trophy,
-  BarChart2
+  BarChart2,
+  Gauge
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
@@ -34,9 +35,10 @@ import GalleryManager from "../../components/admin/GalleryManager";
 import SuccessStoriesManager from "./SuccessStoriesManager";
 import SiteSettingsManager from "../../components/admin/SiteSettingsManager";
 import DashboardStats from "../../components/admin/DashboardStats";
+import PerformanceMonitor from "../../components/admin/PerformanceMonitor";
 import { collection, query, orderBy, onSnapshot, doc, updateDoc, deleteDoc, writeBatch, getDocs, serverTimestamp } from "firebase/firestore";
 
-type AdminTab = 'stats' | 'blogs' | 'contacts' | 'applications' | 'leads' | 'veo' | 'gallery' | 'stories' | 'settings';
+type AdminTab = 'stats' | 'blogs' | 'contacts' | 'applications' | 'leads' | 'veo' | 'gallery' | 'stories' | 'settings' | 'performance';
 
 export default function AdminDashboard() {
   const { user, isAdmin, loading: authLoading } = useAuth();
@@ -294,6 +296,14 @@ export default function AdminDashboard() {
           </button>
 
           <button 
+            onClick={() => setActiveTab('performance')}
+            className={`w-full flex items-center justify-between p-4 rounded-2xl font-bold transition-all ${activeTab === 'performance' ? 'bg-primary text-white shadow-lg' : 'text-white/60 hover:text-white hover:bg-white/5'}`}
+          >
+            <div className="flex items-center gap-3"><Gauge size={20} /> Speed & Vitals</div>
+            {activeTab === 'performance' && <div className="w-2 h-2 bg-white rounded-full" />}
+          </button>
+
+          <button 
             onClick={() => setActiveTab('settings')}
             className={`w-full flex items-center justify-between p-4 rounded-2xl font-bold transition-all ${activeTab === 'settings' ? 'bg-primary text-white shadow-lg' : 'text-white/60 hover:text-white hover:bg-white/5'}`}
           >
@@ -411,6 +421,16 @@ export default function AdminDashboard() {
               Success Stories
             </button>
             <button
+              onClick={() => setActiveTab('performance')}
+              className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold shrink-0 transition-all ${
+                activeTab === 'performance'
+                  ? 'bg-primary text-white shadow-md shadow-primary/10'
+                  : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'
+              }`}
+            >
+              Performance
+            </button>
+            <button
               onClick={() => setActiveTab('settings')}
               className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold shrink-0 transition-all ${
                 activeTab === 'settings'
@@ -440,6 +460,7 @@ export default function AdminDashboard() {
                activeTab === 'veo' ? 'Veo Promo Studio' : 
                activeTab === 'gallery' ? 'Campus Gallery Manager' : 
                activeTab === 'stories' ? 'Success Stories Manager' :
+               activeTab === 'performance' ? 'Vitals & Speed Audit' :
                'Global Site Settings'}
             </h1>
             <p className="text-gray-500 mt-2">
@@ -451,6 +472,7 @@ export default function AdminDashboard() {
                activeTab === 'veo' ? 'AI-powered video generation for promotional content.' : 
                activeTab === 'gallery' ? 'Add or remove photos from the "Life at Language World" section.' : 
                activeTab === 'stories' ? 'Manage student certificates and achievements.' :
+               activeTab === 'performance' ? 'Monitor load speeds, asset size breakdowns, database health, and server latency.' :
                'Customize your branding, images, and global website content.'}
               <span className="block mt-1 text-[10px] opacity-50">Admin: {user?.email}</span>
             </p>
@@ -572,6 +594,10 @@ export default function AdminDashboard() {
 
             {activeTab === 'settings' && (
               <SiteSettingsManager />
+            )}
+
+            {activeTab === 'performance' && (
+              <PerformanceMonitor />
             )}
           </div>
         )}
@@ -823,10 +849,14 @@ function AppRow({ app, onStatusUpdate, onDelete, isConfirming, onDeleteClick, on
             </span>
             <span className="text-xs text-gray-400 font-bold flex items-center gap-1"><Clock size={12} /> {date}</span>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
             <div className="space-y-1">
               <p className="text-[10px] uppercase font-bold text-gray-400">Target Course</p>
               <p className="font-bold text-primary">{app.course}</p>
+            </div>
+            <div className="space-y-1">
+              <p className="text-[10px] uppercase font-bold text-gray-400">Preferred Schedule</p>
+              <p className="font-bold text-amber-600">{app.preferredTime || 'Not specified'}</p>
             </div>
             <div className="space-y-1">
               <p className="text-[10px] uppercase font-bold text-gray-400">Contact Email</p>

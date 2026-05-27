@@ -14,7 +14,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const adminEmail = "hsglobalconsultants@gmail.com";
+  const adminEmails = ["hsglobalconsultants@gmail.com", "languageworld884@gmail.com"];
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (u) => {
@@ -24,7 +24,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return unsubscribe;
   }, []);
 
-  const isAdmin = user?.email?.toLowerCase() === adminEmail.toLowerCase();
+  const isAdmin = user?.email ? adminEmails.map(e => e.toLowerCase()).includes(user.email.toLowerCase()) : false;
 
   return (
     <AuthContext.Provider value={{ user, loading, isAdmin }}>

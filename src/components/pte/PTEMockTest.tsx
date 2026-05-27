@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Timer, ArrowRight, CheckCircle2, AlertCircle, Play, Square, RefreshCcw, Loader2, Mic, StopCircle, Download, User, Mail, Phone } from 'lucide-react';
+import { Timer, ArrowRight, CheckCircle2, AlertCircle, Play, Square, RefreshCcw, Loader2, Mic, StopCircle, Download, User, Mail, Phone, Award } from 'lucide-react';
 import { scoreLanguageTask } from '../../services/geminiService';
 import { leadService } from '../../services/leadService';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { generateCertificatePDF } from '../../utils/certificateGenerator';
 
 interface PTEQuestion {
   id: string;
@@ -49,8 +50,10 @@ export default function PTEMockTest() {
   const [showLeadForm, setShowLeadForm] = useState(false);
   const [leadCaptured, setLeadCaptured] = useState(false);
   const [leadData, setLeadData] = useState({ name: '', email: '', phone: '' });
+  const [honeypot, setHoneypot] = useState('');
   const [isScoring, setIsScoring] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isDownloadingCertificate, setIsDownloadingCertificate] = useState(false);
   const [results, setResults] = useState<any>(null);
   const [loadingMessage, setLoadingMessage] = useState("Analyzing your PTE performance...");
   const [isRecording, setIsRecording] = useState(false);
@@ -146,6 +149,14 @@ export default function PTEMockTest() {
   const handleLeadSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Anti-spam Honeypot protection
+    if (honeypot.trim()) {
+      console.warn("Spam execution suspected & stopped silently via Honeypot check.");
+      setShowLeadForm(false);
+      beginExam();
+      return;
+    }
+    
     try {
       await leadService.saveLead({
         name: leadData.name,
@@ -212,6 +223,25 @@ export default function PTEMockTest() {
       alert("There was an issue generating your PDF. Please try again.");
     } finally {
       setIsDownloading(false);
+    }
+  };
+
+  const downloadCertificate = async () => {
+    if (isDownloadingCertificate) return;
+    try {
+      setIsDownloadingCertificate(true);
+      await new Promise(resolve => setTimeout(resolve, 500));
+      const pdf = generateCertificatePDF({
+        candidateName: leadData.name || "Language World Student",
+        testType: 'PTE',
+        score: results?.score || "0",
+      });
+      pdf.save(`PTE_Certificate_${(leadData.name || "Student").trim().replace(/\s+/g, '_')}.pdf`);
+    } catch (error) {
+      console.error("Certificate Generation Error:", error);
+      alert("Failed to generate certificate. Please try again.");
+    } finally {
+      setIsDownloadingCertificate(false);
     }
   };
 
@@ -315,6 +345,20 @@ export default function PTEMockTest() {
             </div>
           </div>
 
+          {/* Anti-spam visually hidden honeypot input */}
+          <div className="absolute opacity-0 w-0 h-0 overflow-hidden pointer-events-none" aria-hidden="true">
+            <label htmlFor="pte_middle_name">Please leave this field empty</label>
+            <input 
+              type="text" 
+              id="pte_middle_name" 
+              name="pte_middle_name" 
+              value={honeypot} 
+              onChange={(e) => setHoneypot(e.target.value)}
+              tabIndex={-1}
+              autoComplete="new-password"
+            />
+          </div>
+
           <button type="submit" className="btn-primary w-full py-5 rounded-2xl text-xl font-black shadow-xl shadow-primary/20 flex items-center justify-center gap-3">
             Start Exam Now <ArrowRight size={24} />
           </button>
@@ -326,26 +370,46 @@ export default function PTEMockTest() {
   if (isFinished) {
     return (
       <div className="bg-white rounded-[2.5rem] p-12 shadow-2xl border border-soft-gray">
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-8">
           <h3 className="text-3xl font-extrabold text-accent">Simulation Results</h3>
           {!isScoring && results && (
-            <button 
-              onClick={downloadPDF}
-              disabled={isDownloading}
-              className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all ${
-                isDownloading ? 'bg-gray-400 cursor-not-allowed' : 'bg-accent text-white hover:bg-black'
-              }`}
-            >
-              {isDownloading ? (
-                <>
-                  <Loader2 className="animate-spin" size={20} /> Generating...
-                </>
-              ) : (
-                <>
-                  <Download size={20} /> Download PDF Report
-                </>
-              )}
-            </button>
+            <div className="flex flex-wrap gap-3">
+              <button 
+                onClick={downloadPDF}
+                disabled={isDownloading || isDownloadingCertificate}
+                className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all ${
+                  isDownloading ? 'bg-gray-400 cursor-not-allowed' : 'bg-accent text-white hover:bg-black'
+                }`}
+              >
+                {isDownloading ? (
+                  <>
+                    <Loader2 className="animate-spin" size={20} /> Generating...
+                  </>
+                ) : (
+                  <>
+                    <Download size={20} /> Download PDF Report
+                  </>
+                )}
+              </button>
+
+              <button 
+                onClick={downloadCertificate}
+                disabled={isDownloading || isDownloadingCertificate}
+                className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all text-white shadow-md ${
+                  isDownloadingCertificate ? 'bg-gray-400 cursor-not-allowed' : 'bg-amber-500 hover:bg-amber-600 shadow-amber-500/10'
+                }`}
+              >
+                {isDownloadingCertificate ? (
+                  <>
+                    <Loader2 className="animate-spin" size={20} /> Issuing...
+                  </>
+                ) : (
+                  <>
+                    <Award size={20} /> Download Certificate
+                  </>
+                )}
+              </button>
+            </div>
           )}
         </div>
         

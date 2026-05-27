@@ -14,6 +14,7 @@ export default function ContactPage() {
     subject: "",
     message: ""
   });
+  const [honeypot, setHoneypot] = useState("");
   const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -21,6 +22,19 @@ export default function ContactPage() {
     e.preventDefault();
     setStatus("submitting");
     setErrorMessage("");
+
+    // Anti-spam Honeypot protection
+    if (honeypot.trim()) {
+      console.warn("Spam execution suspected & stopped silently via Honeypot check.");
+      // Silent success behavior to trick automated spam bots
+      setTimeout(() => {
+        setStatus("success");
+        setFormData({ name: "", email: "", phone: "", subject: "", message: "" });
+        setHoneypot("");
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }, 700);
+      return;
+    }
 
     try {
       console.log("Submitting contact query to Firebase...", formData);
@@ -31,6 +45,16 @@ export default function ContactPage() {
         createdAt: serverTimestamp()
       });
       console.log("Contact submitted successfully, ID:", docRef.id);
+
+      // Background trigger for email notification (fire-and-forget for instant success)
+      fetch("/api/notify/submission", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "contact", data: formData })
+      }).catch((e) => {
+        console.warn("Nodemailer contact alert trigger warning (ignored for client continuity):", e);
+      });
+
       setStatus("success");
       setFormData({ name: "", email: "", phone: "", subject: "", message: "" });
       
@@ -228,6 +252,20 @@ export default function ContactPage() {
                       required
                       disabled={status === "submitting"}
                     ></textarea>
+                  </div>
+
+                  {/* Anti-spam visually hidden honeypot input */}
+                  <div className="absolute opacity-0 w-0 h-0 overflow-hidden pointer-events-none" aria-hidden="true">
+                    <label htmlFor="user_zip_code">Please leave this field empty</label>
+                    <input 
+                      type="text" 
+                      id="user_zip_code" 
+                      name="user_zip_code" 
+                      value={honeypot} 
+                      onChange={(e) => setHoneypot(e.target.value)}
+                      tabIndex={-1}
+                      autoComplete="new-password"
+                    />
                   </div>
                   
                   {status === "error" && (

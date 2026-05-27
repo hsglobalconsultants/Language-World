@@ -9,6 +9,7 @@ import { db } from "../../lib/firebase";
 export default function Footer() {
   const currentYear = new Date().getFullYear();
   const [newsletterEmail, setNewsletterEmail] = useState("");
+  const [newsletterHoneypot, setNewsletterHoneypot] = useState("");
   const [newsletterStatus, setNewsletterStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
   const [newsletterError, setNewsletterError] = useState("");
 
@@ -25,15 +26,45 @@ export default function Footer() {
     setNewsletterStatus("submitting");
     setNewsletterError("");
 
+    // Anti-spam Honeypot protection
+    if (newsletterHoneypot.trim()) {
+      console.warn("Newsletter spam execution suspected & stopped silently via Honeypot check.");
+      setTimeout(() => {
+        setNewsletterStatus("success");
+        setNewsletterEmail("");
+        setNewsletterHoneypot("");
+      }, 700);
+      return;
+    }
+
     try {
-      await addDoc(collection(db, "contacts"), {
+      const emailVal = newsletterEmail.trim();
+      const payload = {
         name: "Newsletter Subscriber",
-        email: newsletterEmail.trim(),
+        email: emailVal,
         subject: "Newsletter Subscription Request",
-        message: "Please subscribe me to the Language World newsletter for academic updates, German, IELTS, and PTE study resources.",
+        phone: "N/A",
+        message: "Please subscribe me to the Language World newsletter for academic updates, German, IELTS, and PTE study resources."
+      };
+
+      await addDoc(collection(db, "contacts"), {
+        name: payload.name,
+        email: payload.email,
+        subject: payload.subject,
+        message: payload.message,
         status: "new",
         createdAt: serverTimestamp()
       });
+
+      // Background trigger for email notification (fire-and-forget for instant success)
+      fetch("/api/notify/submission", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "contact", data: payload })
+      }).catch((e) => {
+        console.warn("Nodemailer newsletter alert trigger warning:", e);
+      });
+
       setNewsletterStatus("success");
       setNewsletterEmail("");
     } catch (err: any) {
@@ -214,6 +245,16 @@ export default function Footer() {
                 className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 pr-12 text-xs focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all text-white font-medium disabled:opacity-70"
                 required
               />
+              {/* Invisible anti-spam honeypot input */}
+              <div className="absolute opacity-0 w-0 h-0 overflow-hidden pointer-events-none" aria-hidden="true">
+                <input 
+                  type="text" 
+                  value={newsletterHoneypot} 
+                  onChange={(e) => setNewsletterHoneypot(e.target.value)} 
+                  tabIndex={-1} 
+                  autoComplete="new-password" 
+                />
+              </div>
               <button 
                 type="submit"
                 disabled={newsletterStatus === "submitting" || newsletterStatus === "success" || !newsletterEmail}
@@ -234,7 +275,7 @@ export default function Footer() {
 
       <div className="max-w-7xl mx-auto px-6 mt-20 pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
         <p className="text-white/40 text-xs font-semibold tracking-wide">
-          © {currentYear} Language World. All rights reserved. | <Link to="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
+          © {currentYear} Language World. All rights reserved. | <Link to="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link> | <Link to="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
         </p>
         <button
           onClick={scrollToTop}

@@ -19,7 +19,7 @@ export const COURSES = [
     title: "German Language",
     subtitle: "A1 to B2 Levels",
     description: "Comprehensive German language courses from beginner to intermediate levels, following CEF standards.",
-    image: "https://images.unsplash.com/photo-1526392060635-9d6019884377?auto=format&fit=crop&q=80&w=800",
+    image: "https://images.unsplash.com/photo-1599946347371-68eb71b16afc?auto=format&fit=crop&q=80&w=800",
     features: ["Expert Instructors", "Daily Practice Sessions", "Exam Preparation", "Interactive Classes"],
     path: "/courses/german-language",
   },

@@ -443,7 +443,7 @@ export default function AboutPage() {
               "A1 A2 B1 B2 German visa certification"
             ].map((tag, idx) => (
               <span key={idx} className="bg-gray-100 text-gray-500 text-[10px] font-bold px-3 py-1 rounded-full border border-gray-150 uppercase tracking-tight">
-                #{tag}
+                {tag}
               </span>
             ))}
           </div>

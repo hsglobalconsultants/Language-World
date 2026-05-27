@@ -3,6 +3,7 @@ import path from "path";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, Type } from "@google/genai";
 import dotenv from "dotenv";
+import nodemailer from "nodemailer";
 
 dotenv.config();
 
@@ -10,6 +11,33 @@ const app = express();
 const PORT = 3000;
 
 app.use(express.json());
+
+// Lazy-initialized Nodemailer transporter to prevent crashing on boot when credentials are empty
+let mailTransporter: nodemailer.Transporter | null = null;
+function getMailTransporter(): nodemailer.Transporter | null {
+  if (!mailTransporter) {
+    const host = process.env.SMTP_HOST || "smtp.gmail.com";
+    const port = parseInt(process.env.SMTP_PORT || "587");
+    const user = process.env.SMTP_USER;
+    const pass = process.env.SMTP_PASS;
+
+    if (!user || !pass) {
+      console.warn("SMTP_USER or SMTP_PASS environment variables are missing. Emails will be logged to console in detail.");
+      return null;
+    }
+
+    mailTransporter = nodemailer.createTransport({
+      host,
+      port,
+      secure: port === 465,
+      auth: {
+        user,
+        pass,
+      },
+    });
+  }
+  return mailTransporter;
+}
 
 // Lazy-initialized Gemini client safe initialization
 let aiClient: GoogleGenAI | null = null;
@@ -254,7 +282,7 @@ app.post("/api/german-tutor/evaluate-letter", async (req: express.Request, res: 
       `Calculate a total score out of 25. Provide constructive feedback, point out major grammatical mistakes with corrections and clear explanations in bilingual English/German, and write a high-scoring master-grade rewritten version of the letter.`;
 
     const systemInstruction = 
-      "You are 'Language World Goethe Certificate Expert', a certified TELC/Goethe language examiner " +
+      "You are 'Language World Goethe Certificate Expert', an expert Goethe exam preparation coach " +
       "at Language World Karachi. You score student letters with deep professional accuracy, explain grammatical structures clearly, " +
       "and provide a pristine rewritten email/letter. Return a clean, valid JSON response conforming to the schema.";
 
@@ -775,6 +803,144 @@ app.post("/api/pte/evaluate-speaking", async (req: express.Request, res: express
   } catch (err: any) {
     console.error("PTE speaking assessment error:", err);
     res.status(500).json({ error: err.message || "Failed to analyze Speaking attempt with AI." });
+  }
+});
+
+
+// 7. Express endpoint for email notifications
+app.post("/api/notify/submission", async (req: express.Request, res: express.Response): Promise<any> => {
+  try {
+    const { type, data } = req.body;
+    if (!type || !data) {
+      return res.status(400).json({ error: "Missing type or data for notification." });
+    }
+
+    const adminEmail = process.env.ADMIN_EMAIL || "hsglobalconsultants@gmail.com";
+    const transporter = getMailTransporter();
+
+    let subject = "";
+    let htmlContent = "";
+
+    if (type === "application") {
+      subject = `[Language World Admin] New Online Application Received - ${data.fullName}`;
+      htmlContent = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
+          <div style="background-color: #0f172a; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
+            <p style="color: #FFCE00; margin: 0; font-size: 24px; font-weight: bold; font-family: sans-serif; letter-spacing: 1px;">LANGUAGE WORLD</p>
+            <p style="color: #94a3b8; margin: 5px 0 0 0; font-size: 14px;">Online Student Application Alert</p>
+          </div>
+          <div style="padding: 24px 20px;">
+            <p style="font-size: 16px; color: #334155; line-height: 1.5;">Dear Admin Team,</p>
+            <p style="font-size: 15px; color: #475569; line-height: 1.5;">A new student has submitted an application form on the website. Here are the core details:</p>
+            
+            <table style="width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px;">
+              <tr style="border-bottom: 1px solid #f1f5f9;">
+                <td style="padding: 10px 0; font-weight: bold; color: #1e293b; width: 140px;">Applicant Name:</td>
+                <td style="padding: 10px 0; color: #475569;">${data.fullName}</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #f1f5f9;">
+                <td style="padding: 10px 0; font-weight: bold; color: #1e293b;">Email Address:</td>
+                <td style="padding: 10px 0; color: #475569;"><a href="mailto:${data.email}" style="color: #0f172a; text-decoration: underline; font-weight: bold;">${data.email}</a></td>
+              </tr>
+              <tr style="border-bottom: 1px solid #f1f5f9;">
+                <td style="padding: 10px 0; font-weight: bold; color: #1e293b;">Phone Number:</td>
+                <td style="padding: 10px 0; color: #475569;">${data.phone}</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #f1f5f9;">
+                <td style="padding: 10px 0; font-weight: bold; color: #1e293b;">Interested Course:</td>
+                <td style="padding: 10px 0; color: #0f172a; font-weight: bold;">${data.course}</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #f1f5f9;">
+                <td style="padding: 10px 0; font-weight: bold; color: #1e293b;">Preferred Class Time:</td>
+                <td style="padding: 10px 0; color: #d97706; font-weight: bold;">${data.preferredTime || 'Not specified'}</td>
+              </tr>
+              <tr>
+                <td style="padding: 10px 0; font-weight: bold; color: #1e293b; vertical-align: top;">Student Message:</td>
+                <td style="padding: 10px 0; color: #475569; line-height: 1.5; white-space: pre-line;">${data.message || 'No additional message was provided.'}</td>
+              </tr>
+            </table>
+
+            <div style="margin-top: 30px; text-align: center;">
+              <a href="${process.env.APP_URL || 'https://thelanguageworld.com'}/admin" style="background-color: #0f172a; color: #FFCE00; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px; display: inline-block;">View in Admin Dashboard</a>
+            </div>
+          </div>
+          <div style="background-color: #f8fafc; padding: 15px; text-align: center; border-radius: 0 0 8px 8px; font-size: 11px; color: #64748b; border-top: 1px solid #f1f5f9;">
+            This email was automatically generated by the Language World Online Portal. info@thelanguageworld.com
+          </div>
+        </div>
+      `;
+    } else if (type === "contact") {
+      subject = `[Language World Admin] New Contact Form Inquiry - ${data.subject || 'General'}`;
+      htmlContent = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
+          <div style="background-color: #0f172a; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
+            <p style="color: #FFCE00; margin: 0; font-size: 24px; font-weight: bold; font-family: sans-serif; letter-spacing: 1px;">LANGUAGE WORLD</p>
+            <p style="color: #94a3b8; margin: 5px 0 0 0; font-size: 14px;">Contact Form Inquiry Notification</p>
+          </div>
+          <div style="padding: 24px 20px;">
+            <p style="font-size: 16px; color: #334155; line-height: 1.5;">Dear Admin Team,</p>
+            <p style="font-size: 15px; color: #475569; line-height: 1.5;">A visitor has reached out to Language World Karachi via the Contact Us form. Here are their complete details:</p>
+            
+            <table style="width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px;">
+              <tr style="border-bottom: 1px solid #f1f5f9;">
+                <td style="padding: 10px 0; font-weight: bold; color: #1e293b; width: 140px;">Visitor Name:</td>
+                <td style="padding: 10px 0; color: #475569;">${data.name}</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #f1f5f9;">
+                <td style="padding: 10px 0; font-weight: bold; color: #1e293b;">Email Address:</td>
+                <td style="padding: 10px 0; color: #475569;"><a href="mailto:${data.email}" style="color: #0f172a; text-decoration: underline; font-weight: bold;">${data.email}</a></td>
+              </tr>
+              <tr style="border-bottom: 1px solid #f1f5f9;">
+                <td style="padding: 10px 0; font-weight: bold; color: #1e293b;">Phone Number:</td>
+                <td style="padding: 10px 0; color: #475569;">${data.phone}</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #f1f5f9;">
+                <td style="padding: 10px 0; font-weight: bold; color: #1e293b;">Inquiry Subject:</td>
+                <td style="padding: 10px 0; color: #0f172a; font-weight: bold;">${data.subject || 'General Inquiry'}</td>
+              </tr>
+              <tr>
+                <td style="padding: 10px 0; font-weight: bold; color: #1e293b; vertical-align: top;">Visitor Message:</td>
+                <td style="padding: 10px 0; color: #475569; line-height: 1.5; white-space: pre-line;">${data.message}</td>
+              </tr>
+            </table>
+
+            <div style="margin-top: 30px; text-align: center;">
+              <a href="${process.env.APP_URL || 'https://thelanguageworld.com'}/admin" style="background-color: #0f172a; color: #FFCE00; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px; display: inline-block;">View in Admin Dashboard</a>
+            </div>
+          </div>
+          <div style="background-color: #f8fafc; padding: 15px; text-align: center; border-radius: 0 0 8px 8px; font-size: 11px; color: #64748b; border-top: 1px solid #f1f5f9;">
+            This email was automatically generated by the Language World Contact portal. info@thelanguageworld.com
+          </div>
+        </div>
+      `;
+    }
+
+    if (transporter) {
+      console.log(`Sending email notification to admin group: ${adminEmail}`);
+      await transporter.sendMail({
+        from: `"Language World" <${process.env.SMTP_USER}>`,
+        to: adminEmail,
+        subject,
+        html: htmlContent,
+      });
+      console.log(`Notification sent successfully to ${adminEmail}`);
+      return res.json({ success: true, message: `Email delivered to admin team at ${adminEmail}` });
+    } else {
+      console.log(`=== [OFFLINE EMAIL LOG] ===`);
+      console.log(`To: ${adminEmail}`);
+      console.log(`Subject: ${subject}`);
+      console.log(`Body:\n`, htmlContent);
+      console.log(`===========================`);
+      return res.json({
+        success: true,
+        message: "SMTP is not configured yet. The notification content was logged to the server console.",
+        logged: true
+      });
+    }
+
+  } catch (err: any) {
+    console.error("Failed to process email notification:", err);
+    res.status(500).json({ error: err.message || "Email notification delivery failed on SMTP relay." });
   }
 });
 

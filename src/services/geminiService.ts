@@ -93,10 +93,10 @@ export const translateText = async (text: string, targetLang: string = "English"
   }
 };
 
-export const generateGermanGrammarQuiz = async (count: number = 5) => {
+export const generateGermanGrammarQuiz = async (level: string = "A1", count: number = 5) => {
   const modelName = "gemini-3-flash-preview";
   
-  const prompt = `Generate a German grammar quiz with exactly ${count} multiple-choice questions.
+  const prompt = `Generate a German grammar quiz specifically designed for CEFR level ${level} with exactly ${count} multiple-choice questions.
   Return the response as a VALID JSON array of objects.
   Each object MUST have these fields:
   - question: string (The German sentence with a blank or a question about grammar)

@@ -31,6 +31,7 @@ import AnnouncementPopup from "../components/common/AnnouncementPopup";
 
 export default function HomePage() {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const [openIeltsFaq, setOpenIeltsFaq] = useState<number | null>(0);
   const [blogs, setBlogs] = useState<BlogPost[]>(BLOG_POSTS);
   const [siteSettings, setSiteSettings] = useState<SiteSettings | null>(() => {
     try {
@@ -96,6 +97,13 @@ export default function HomePage() {
     { q: "How can I register for Goethe exams in Karachi?", a: "You can register for Goethe exams through the official Goethe-Institut website or by contacting an authorized exam center in Karachi." },
     { q: "What is your success rate for IELTS/PTE?", a: "Our students consistently achieve 7.0+ in IELTS and 65+ in PTE thanks to our result-oriented methodology." },
     { q: "Are the instructors certified?", a: "Absolutely! All our instructors are certified professionals with years of experience in language coaching." },
+  ];
+
+  const ieltsFaqs = [
+    { q: "How can I achieve a 7.5+ Band in IELTS?", a: "Achieving a 7.5+ requires structured guidance, strategy templates, personalized examiner feedback, and regular full-length mock exams. Our intensive syllabus covers high-scoring speaking templates, band-9 writing formats, and speed-reading techniques." },
+    { q: "What is the difference between IELTS Academic and General Training?", a: "Academic is for students planning to pursue higher education or professional registration in English-speaking countries. General Training is for immigration purposes (e.g., Canada, Australia, UKExpress Entry) or secondary educational/work experience contexts." },
+    { q: "How long serves the IELTS preparation course duration at Language World?", a: "Our comprehensive premium preparation course is 8 weeks with continuous mock tests and continuous guidance. We also run a 4-week fast-track boot camp for candidates on short deadlines." },
+    { q: "Are weekly computer-based and paper-based mock tests included?", a: "Yes, fully simulated computer-delivered and paper-based mock tests under realistic exam-room environments are conducted every week, fully included at no extra cost, complete with structured diagnostic mock scoring." }
   ];
 
   return (
@@ -282,98 +290,231 @@ export default function HomePage() {
       </section>
 
       {/* German AI Tutor Promo Section */}
-      <section className="py-24 bg-gradient-to-br from-[#0c0f1d] via-[#12162a] to-[#080a14] text-white relative overflow-hidden">
-        {/* Decorative ambient glow */}
-        <div className="absolute inset-0 z-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,206,0,0.1),transparent_50%)]"></div>
-        <div className="absolute top-1/2 left-0 -translate-y-1/2 w-72 h-72 bg-primary/10 rounded-full blur-3xl z-0"></div>
+      <section className="py-24 bg-gradient-to-br from-accent via-[#392eb0] to-[#160f58] text-white relative overflow-hidden">
+        {/* Decorative ambient highlights & branding-colored blur spheres */}
+        <div className="absolute inset-0 z-0 bg-[radial-gradient(ellipse_at_top_right,rgba(123,192,67,0.22),transparent_50%)]"></div>
+        <div className="absolute top-1/2 left-0 -translate-y-1/2 w-80 h-80 bg-primary/15 rounded-full blur-[110px] z-0"></div>
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-accent/20 rounded-full blur-[140px] z-0"></div>
 
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
             {/* Promo Text */}
-            <div className="lg:col-span-7 space-y-8">
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#FFCE00]/20 text-[#FFCE00] border border-[#FFCE00]/30 font-bold text-xs uppercase tracking-widest leading-none">
-                <Sparkles size={12} className="animate-pulse" />
+            <div className="lg:col-span-7 space-y-8 animate-fade-in">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 text-primary border border-primary/20 font-bold text-xs uppercase tracking-widest leading-none backdrop-blur-md">
+                <Sparkles size={12} className="animate-pulse text-primary fill-primary" />
                 <span>Pakistan's First German AI Tutor Live</span>
               </div>
               
-              <h2 className="text-4xl md:text-5xl font-black text-white leading-tight">
-                Meet Your 24/7 Interactive <span className="text-[#FFCE00]">Pakistan's First German AI Tutor</span>
+              <h2 className="text-4xl md:text-5.5xl font-black text-white leading-tight">
+                Meet Your 24/7 Interactive <span className="text-primary drop-shadow-[0_4px_12px_rgba(123,192,67,0.35)]">Pakistan's First German AI Tutor</span>
               </h2>
               
-              <p className="text-slate-300 text-base md:text-lg leading-relaxed max-w-2xl">
+              <p className="text-slate-200 text-base md:text-lg leading-relaxed max-w-2xl font-medium">
                 Ready to ace your Goethe Certified A1, A2, B1 or B2 exams? Practice speaking, perfect your grammar, and receive instant native feedback anytime, anywhere. Guided by our advanced AI conversation model.
               </p>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2">
-                <div className="flex gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-[#FFCE00] flex-shrink-0">
+                <div className="flex gap-4 p-5 rounded-[2rem] bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all duration-300 backdrop-blur-xs">
+                  <div className="w-12 h-12 rounded-2xl bg-primary/20 border border-primary/30 flex items-center justify-center text-primary flex-shrink-0">
                     <Cpu size={20} />
                   </div>
                   <div>
                     <h4 className="font-bold text-white text-base">Instant Evaluation</h4>
-                    <p className="text-slate-400 text-sm mt-1">Get instant metrics on pronunciation, word correctness, and grammar delivery.</p>
+                    <p className="text-slate-300 text-sm mt-1 leading-relaxed">Get instant metrics on pronunciation, word correctness, and grammar delivery.</p>
                   </div>
                 </div>
 
-                <div className="flex gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-[#FFCE00] flex-shrink-0">
+                <div className="flex gap-4 p-5 rounded-[2rem] bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all duration-300 backdrop-blur-xs">
+                  <div className="w-12 h-12 rounded-2xl bg-primary/20 border border-primary/30 flex items-center justify-center text-primary flex-shrink-0">
                     <Sparkles size={20} />
                   </div>
                   <div>
                     <h4 className="font-bold text-white text-base">Custom Syllabus Gen</h4>
-                    <p className="text-slate-400 text-sm mt-1">Generate Goethe vocabulary lists and custom training worksheets in 1-click.</p>
+                    <p className="text-slate-300 text-sm mt-1 leading-relaxed">Generate Goethe vocabulary lists and custom training worksheets in 1-click.</p>
                   </div>
                 </div>
               </div>
 
               <div className="flex flex-col sm:flex-row items-center gap-4 pt-4">
-                <Link 
-                  to="/german-tutor"
-                  id="home-ai-tutor-cta"
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#FFCE00] hover:bg-[#ffe04d] text-slate-950 px-8 py-4.5 rounded-2xl font-sans font-black tracking-wider text-xs uppercase shadow-xl hover:shadow-[#FFCE00]/20 transition duration-300 cursor-pointer"
-                >
-                  Start Learning German Free
-                  <ArrowRight size={15} />
-                </Link>
-                <Link 
-                  to="/courses"
-                  className="w-full sm:w-auto text-center py-4 px-8 text-slate-300 hover:text-white text-xs uppercase tracking-wider font-black transition-colors"
-                >
-                  Explore Standard Batches
-                </Link>
+                <div className="relative w-full sm:w-auto group/btn cursor-pointer">
+                  {/* Glowing custom branding shadow */}
+                  <div className="absolute -inset-1.5 bg-gradient-to-r from-primary to-accent rounded-2xl blur-lg opacity-40 group-hover/btn:opacity-85 transition duration-500 animate-pulse"></div>
+                  <Link 
+                    to="/german-tutor"
+                    id="home-ai-tutor-cta"
+                    className="relative w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-white px-8 py-5 rounded-2xl font-sans font-black tracking-wider text-xs uppercase transition duration-300 cursor-pointer shadow-lg"
+                  >
+                    Start Learning German Free
+                    <ArrowRight size={15} className="group-hover/btn:translate-x-1.5 transition-transform" />
+                  </Link>
+                </div>
               </div>
             </div>
 
             {/* AI Robot illustration with decorative widgets */}
             <div className="lg:col-span-5 relative">
-              <div className="absolute -inset-1.5 bg-gradient-to-tr from-[#FFCE00] to-primary rounded-[3rem] blur-xl opacity-30 animate-pulse"></div>
+              <div className="absolute -inset-2 bg-gradient-to-tr from-primary to-accent rounded-[3.2rem] blur-2xl opacity-40 animate-pulse"></div>
               
-              <div className="relative bg-slate-900/60 backdrop-blur-md rounded-[3rem] p-8 border border-white/10 overflow-visible shadow-2xl flex flex-col items-center">
-                {/* Image overlay */}
-                <div className="w-full rounded-2xl overflow-hidden aspect-square relative bg-slate-950 border border-white/5">
-                  <img 
-                    id="german-ai-tutor-promo-img"
-                    src="https://images.unsplash.com/photo-1485827404703-89b55fcc595e?auto=format&fit=crop&q=80&w=600"
-                    alt="Pakistan's First German AI Tutor Robot" 
-                    className="w-full h-full object-cover opacity-90 hover:scale-105 transition-transform duration-500"
-                    referrerPolicy="no-referrer"
-                  />
+              <div className="relative bg-white/5 backdrop-blur-xl rounded-[3rem] p-8 border border-white/10 overflow-visible shadow-2xl flex flex-col items-center">
+                {/* Image container with transparancy support */}
+                <div className="w-full rounded-2xl overflow-visible aspect-square relative bg-transparent flex items-center justify-center p-4">
+                  {/* Radar grid backdrop */}
+                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.06)_1px,transparent_1px)] bg-[size:16px_16px] pointer-events-none"></div>
+                  
+                  {siteSettings?.mascotImage ? (
+                    <img
+                      id="german-ai-tutor-promo-img"
+                      src={siteSettings.mascotImage}
+                      alt="Pakistan's First German AI Tutor Robot" 
+                      className="w-[95%] h-[95%] object-contain drop-shadow-[0_20px_25px_rgba(123,192,67,0.3)] transition-all duration-300 animate-float"
+                      style={{ animationDuration: "4s" }}
+                      referrerPolicy="no-referrer"
+                    />
+                  ) : (
+                    <svg
+                      viewBox="0 0 200 200"
+                      className="w-[95%] h-[95%] drop-shadow-3xl filter hover:drop-shadow-[0_20px_20px_rgba(123,192,67,0.25)] transition-all duration-300 animate-float"
+                      style={{ animationDuration: "4s" }}
+                    >
+                      <defs>
+                        <radialGradient id="promoRobotBodyGrad" cx="50%" cy="40%" r="50%">
+                          <stop offset="0%" stopColor="#ffffff" />
+                          <stop offset="70%" stopColor="#f1f3f7" />
+                          <stop offset="100%" stopColor="#d5dae2" />
+                        </radialGradient>
+                        <linearGradient id="promoScreenGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                          <stop offset="0%" stopColor="#151d30" />
+                          <stop offset="100%" stopColor="#0a0d14" />
+                        </linearGradient>
+                        <radialGradient id="promoEyeGlowGrad" cx="50%" cy="50%" r="50%">
+                          <stop offset="0%" stopColor="#22d3ee" stopOpacity="1" />
+                          <stop offset="50%" stopColor="#06b6d4" stopOpacity="0.8" />
+                          <stop offset="100%" stopColor="#0891b2" stopOpacity="0" />
+                        </radialGradient>
+                      </defs>
+
+                      {/* BACKGROUND COMPLEMENT/SHADOW */}
+                      <ellipse cx="100" cy="180" rx="40" ry="7" fill="#000000" opacity="0.25" />
+
+                      {/* ROBOT TORSO/BODY */}
+                      <path
+                        d="M60 140 C60 110, 140 110, 140 140 C140 168, 60 168, 60 140 Z"
+                        fill="url(#promoRobotBodyGrad)"
+                        stroke="#cbd1dc"
+                        strokeWidth="2.5"
+                      />
+                      
+                      {/* Robot chest panel (Official Language World Globe Logo Badge) */}
+                      <circle cx="100" cy="143" r="16" fill="#ffffff" stroke="#cbd1dc" strokeWidth="1.5" />
+                      <image href="/globe-logo.svg" x="87" y="130" width="26" height="26" />
+
+                      {/* ROBOT LIMBS / ARM JOINTED ARCS */}
+                      {/* Left Arm (Waving Up gracefully) */}
+                      <g id="promo-waving-arm">
+                        <circle cx="62" cy="128" r="8" fill="#1e293b" />
+                        <path
+                          d="M62 128 C48 115, 36 96, 40 76"
+                          fill="none"
+                          stroke="#d5dae2"
+                          strokeWidth="11"
+                          strokeLinecap="round"
+                        />
+                        <circle cx="40" cy="72" r="9" fill="#27272a" />
+                        <path
+                          d="M40 66 L40 56 M44 68 L47 58 M36 68 L33 58 M46 70 L52 63"
+                          stroke="#27272a"
+                          strokeWidth="4.5"
+                          strokeLinecap="round"
+                        />
+                      </g>
+                      {/* Right Arm */}
+                      <path
+                        d="M138 125 C155 130, 158 155, 148 165 C145 168, 141 160, 144 154"
+                        fill="none"
+                        stroke="#d5dae2"
+                        strokeWidth="11"
+                        strokeLinecap="round"
+                      />
+
+                      {/* ROBOT HEAD / HELMET */}
+                      <rect
+                        x="38"
+                        y="34"
+                        width="124"
+                        height="90"
+                        rx="42"
+                        fill="url(#promoRobotBodyGrad)"
+                        stroke="#cbd1dc"
+                        strokeWidth="3"
+                      />
+
+                      {/* HEADPHONES / EAR CAPS */}
+                      <rect x="25" y="60" width="14" height="38" rx="6" fill="#c3cad6" />
+                      <rect x="161" y="60" width="14" height="38" rx="6" fill="#c3cad6" />
+
+                      {/* ANTENNA TOP HIGHLIGHT */}
+                      <ellipse cx="100" cy="34" rx="20" ry="5" fill="#a4afbf" />
+                      <rect x="98" y="24" width="4" height="10" fill="#a4afbf" />
+                      <circle cx="100" cy="20" r="5" fill="#22d3ee" className="animate-pulse" />
+
+                      {/* ROBOT FACE SCREEN */}
+                      <rect
+                        x="48"
+                        y="44"
+                        width="104"
+                        height="70"
+                        rx="28"
+                        fill="url(#promoScreenGrad)"
+                        stroke="#334155"
+                        strokeWidth="2"
+                      />
+
+                      {/* DIGITAL EMBELLISHED EYES */}
+                      <ellipse cx="75" cy="76" rx="14" ry="14" fill="url(#promoEyeGlowGrad)" opacity="0.65" />
+                      <path
+                        d="M65 78 C65 67, 85 67, 85 78"
+                        fill="none"
+                        stroke="#22d3ee"
+                        strokeWidth="4.5"
+                        strokeLinecap="round"
+                      />
+
+                      <ellipse cx="125" cy="76" rx="14" ry="14" fill="url(#promoEyeGlowGrad)" opacity="0.65" />
+                      <path
+                        d="M115 78 C115 67, 135 67, 135 78"
+                        fill="none"
+                        stroke="#22d3ee"
+                        strokeWidth="4.5"
+                        strokeLinecap="round"
+                      />
+
+                      {/* GLOWING SMILE */}
+                      <path
+                        d="M93 92 Q100 99 107 92"
+                        fill="none"
+                        stroke="#22d3ee"
+                        strokeWidth="4"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                  )}
+                  
+                  {/* Active glowing ring behind the robot */}
+                  <div className="absolute inset-12 rounded-full border border-primary/20 animate-ping opacity-25 pointer-events-none" style={{ animationDuration: "3s" }}></div>
                   {/* Digital interface scanline */}
-                  <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/5 to-transparent pointer-events-none"></div>
+                  <div className="absolute inset-x-0 bottom-0 top-0 bg-gradient-to-b from-transparent via-primary/5 to-transparent pointer-events-none"></div>
                 </div>
 
                 {/* Speech bubbles */}
                 <div className="absolute -top-3 md:-left-3 left-2 z-10 animate-bounce shadow-xl" style={{ animationDuration: "3.5s" }}>
-                  <div className="bg-[#FFCE00] text-slate-950 text-xs font-black px-4 py-2 rounded-2xl rounded-bl-sm border border-[#ffe04d]">
+                  <div className="bg-primary text-white text-xs font-black px-4 py-2 rounded-2xl rounded-bl-sm border border-primary-dark">
                     Guten Tag! Wie geht's? 🤖
                   </div>
                 </div>
 
-
-
                 {/* Tech label badge */}
                 <div className="mt-6 flex flex-col items-center text-center">
-                  <span className="text-[10px] font-black text-[#FFCE00] tracking-widest uppercase">Autonomous Teaching System</span>
+                  <span className="text-[10px] font-black text-primary tracking-widest uppercase">Autonomous Teaching System</span>
                   <span className="text-xl font-black text-white mt-1">Pakistan's First German AI Tutor v2.5</span>
                 </div>
               </div>
@@ -509,12 +650,52 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div id="inquiry-form" className="bg-white p-10 lg:p-12 rounded-[3.5rem] shadow-2xl relative">
-            <div className="absolute -top-10 -right-10 w-24 h-24 bg-primary/20 rounded-full blur-2xl"></div>
-            <h3 className="text-3xl font-extrabold text-accent mb-2">Apply Online</h3>
-            <p className="text-gray-500 mb-10">Start your global journey today. Fill out the form and we'll contact you within 24 hours.</p>
-            
-            <ApplyOnlineForm />
+          <div className="space-y-8">
+            {/* IELTS Prep Accordion Card */}
+            <div className="bg-white p-8 lg:p-10 rounded-[3rem] shadow-xl border border-gray-100 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl"></div>
+              <div className="flex items-center gap-2 mb-3">
+                <Sparkles className="text-primary w-5 h-5 animate-pulse" />
+                <span className="text-primary font-bold text-xs uppercase tracking-widest">IELTS Preparation Expert FAQ</span>
+              </div>
+              <h3 className="text-2xl font-black text-accent mb-2">IELTS Preparation Guide</h3>
+              <p className="text-gray-400 text-xs mb-6">Explore the answers to the most common questions our prospective IELTS students ask.</p>
+              
+              <div className="space-y-3">
+                {ieltsFaqs.map((faq, i) => (
+                  <div key={i} className="bg-slate-50/50 rounded-2xl border border-slate-100 overflow-hidden hover:border-primary/20 transition-all">
+                    <button 
+                      onClick={() => setOpenIeltsFaq(openIeltsFaq === i ? null : i)}
+                      className="w-full px-5 py-4 flex justify-between items-center text-left text-sm font-bold text-accent hover:text-primary transition-colors gap-3"
+                    >
+                      <span>{faq.q}</span>
+                      <ChevronDown className={`w-4 h-4 shrink-0 transition-transform duration-300 ${openIeltsFaq === i ? 'rotate-180 text-primary' : ''}`} />
+                    </button>
+                    <AnimatePresence>
+                      {openIeltsFaq === i && (
+                        <motion.div 
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          className="px-5 pb-5 text-xs text-gray-500 leading-relaxed border-t border-slate-100/30 pt-3"
+                        >
+                          {faq.a}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Original inquiry form */}
+            <div id="inquiry-form" className="bg-white p-10 lg:p-12 rounded-[3.5rem] shadow-2xl relative">
+              <div className="absolute -top-10 -right-10 w-24 h-24 bg-primary/20 rounded-full blur-2xl"></div>
+              <h3 className="text-3xl font-extrabold text-accent mb-2">Apply Online</h3>
+              <p className="text-gray-500 mb-10">Start your global journey today. Fill out the form and we'll contact you within 24 hours.</p>
+              
+              <ApplyOnlineForm />
+            </div>
           </div>
         </div>
       </section>

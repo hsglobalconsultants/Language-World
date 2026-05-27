@@ -34,6 +34,11 @@ export default function CourseDetailPage() {
     );
   }
 
+  const whatsappMessage = encodeURIComponent(
+    `Hi Language World, I'm interested in enrolling in the *${course.title}* course. I would like to consult with an expert regarding batch timings, fee structures, and course outlines. Could you please assist me?`
+  );
+  const whatsappUrl = `https://wa.me/${CONTACT_INFO.whatsapp}?text=${whatsappMessage}`;
+
   const isGerman = id === "german-language";
   const isIelts = id === "ielts-preparation";
   const isPte = id === "pte-preparation";
@@ -119,6 +124,27 @@ export default function CourseDetailPage() {
             >
               {course.description} We provide comprehensive training to help you achieve your goals and excel in your {course.title} examination.
             </motion.p>
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="flex flex-wrap gap-4"
+            >
+              <button 
+                onClick={() => openApplyModal(course.title)}
+                className="btn-primary cursor-pointer"
+              >
+                Enroll Now
+              </button>
+              <a 
+                href={whatsappUrl}
+                target="_blank" 
+                rel="noreferrer"
+                className="btn-outline flex items-center justify-center gap-2 border-white/20 text-white hover:bg-white/10 hover:text-white px-6 py-3 rounded-full font-bold transition-all"
+              >
+                <MessageCircle size={20} className="text-[#25D366] fill-[#25D366] shrink-0" /> Ask an Expert
+              </a>
+            </motion.div>
           </div>
         </div>
       </section>
@@ -656,17 +682,17 @@ export default function CourseDetailPage() {
                   </div>
                   <button 
                     onClick={() => openApplyModal(course.title)}
-                    className="btn-primary w-full py-4 mb-4"
+                    className="btn-primary w-full py-4 mb-4 cursor-pointer"
                   >
                     Enroll Now
                   </button>
                   <a 
-                    href={`https://wa.me/${CONTACT_INFO.whatsapp}?text=I am interested in the ${course.title} course`}
+                    href={whatsappUrl}
                     target="_blank" 
                     rel="noreferrer"
-                    className="btn-outline w-full py-4 text-[#25D366] border-[#25D366] hover:bg-[#25D366] hover:text-white"
+                    className="btn-outline w-full py-4 text-[#25D366] border-[#25D366] hover:bg-[#25D366] hover:text-white flex items-center justify-center gap-2 font-bold"
                   >
-                    <MessageCircle size={20} /> Chat on WhatsApp
+                    <MessageCircle size={20} /> Ask an Expert
                   </a>
                 </div>
 

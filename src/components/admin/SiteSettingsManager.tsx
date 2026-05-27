@@ -2,6 +2,55 @@ import React, { useState, useEffect } from "react";
 import { Save, Upload, X, Loader2, Image as ImageIcon, Plus, Trash2, Star, CheckCircle2, Edit2, Megaphone, Bell } from "lucide-react";
 import { settingsService, SiteSettings, GoogleReviewItem } from "../../services/settingsService";
 
+function parseDateToTimestamp(dateStr: string | undefined): number {
+  if (!dateStr) return 0;
+  const now = Date.now();
+  const trimmed = dateStr.trim().toLowerCase();
+
+  if (trimmed === 'just now' || trimmed === 'today') {
+    return now;
+  }
+  if (trimmed === 'yesterday') {
+    return now - 24 * 60 * 60 * 1000;
+  }
+
+  // Handle relative strings like "3 days ago", "1 week ago", "1 month ago"
+  const relativeMatch = trimmed.match(/^(\d+)\s+(minute|min|hour|hr|day|week|month|year)s?\s+ago$/);
+  if (relativeMatch) {
+    const value = parseInt(relativeMatch[1], 10);
+    const unit = relativeMatch[2];
+    let multiplier = 0;
+    
+    if (unit.startsWith('min')) {
+      multiplier = 60 * 1000;
+    } else if (unit.startsWith('hour') || unit.startsWith('hr')) {
+      multiplier = 60 * 60 * 1000;
+    } else if (unit.startsWith('day')) {
+      multiplier = 24 * 60 * 60 * 1000;
+    } else if (unit.startsWith('week')) {
+      multiplier = 7 * 24 * 60 * 60 * 1000;
+    } else if (unit.startsWith('month')) {
+      multiplier = 30 * 24 * 60 * 60 * 1000;
+    } else if (unit.startsWith('year')) {
+      multiplier = 365 * 24 * 60 * 60 * 1000;
+    }
+    
+    return now - value * multiplier;
+  }
+
+  // Fallback to JS Date parsing (handles "May 15, 2026", "2026-05-24", etc.)
+  const parsed = Date.parse(dateStr);
+  if (!isNaN(parsed)) {
+    return parsed;
+  }
+
+  return 0;
+}
+
+const sortReviewsByDate = (reviews: GoogleReviewItem[]): GoogleReviewItem[] => {
+  return [...reviews].sort((a, b) => parseDateToTimestamp(b.date) - parseDateToTimestamp(a.date));
+};
+
 export default function SiteSettingsManager() {
   const [settings, setSettings] = useState<SiteSettings | null>(null);
   const [loading, setLoading] = useState(true);
@@ -61,11 +110,15 @@ export default function SiteSettingsManager() {
     const fetchSettings = async () => {
       const data = await settingsService.getSettings();
       if (data) {
+        if (data.reviews && Array.isArray(data.reviews)) {
+          data.reviews = sortReviewsByDate(data.reviews);
+        }
         setSettings(data);
       } else {
         // Initialize with default if not exists
         setSettings({
           heroImage: "https://images.unsplash.com/photo-1622675363211-6e7ad0d6c760?auto=format&fit=crop&q=80&w=1000",
+          reviews: sortReviewsByDate([...defaultReviews])
         });
       }
       setLoading(false);
@@ -106,10 +159,15 @@ export default function SiteSettingsManager() {
           }
 
           // Draw image on canvas
+          ctx.clearRect(0, 0, width, height);
           ctx.drawImage(img, 0, 0, width, height);
           
           // Get compressed data url
-          const dataUrl = canvas.toDataURL('image/jpeg', quality);
+          // Preserve transparency for PNG and WebP files to prevent black backgrounds
+          const isTransparent = file.type === 'image/png' || file.type === 'image/webp' || file.type === 'image/svg+xml' || file.name?.endsWith('.png') || file.name?.endsWith('.svg');
+          const outputType = isTransparent ? 'image/png' : 'image/jpeg';
+          
+          const dataUrl = canvas.toDataURL(outputType, quality);
           resolve(dataUrl);
         };
         img.onerror = () => reject(new Error("Failed to load image object"));
@@ -153,6 +211,25 @@ export default function SiteSettingsManager() {
     } catch (err: any) {
       console.error("Logo compression failed:", err);
       setError("Failed to process and compress website logo. Please try another file.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleMascotFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setError(null);
+    setIsSubmitting(true);
+    
+    try {
+      // Compress the mascot image (waging, with logo, etc.) for high speed loading
+      const compressedDataUrl = await compressImage(file, 800, 0.8);
+      setSettings(prev => prev ? ({ ...prev, mascotImage: compressedDataUrl }) : null);
+    } catch (err: any) {
+      console.error("Mascot compression failed:", err);
+      setError("Failed to process and compress German AI Tutor Mascot. Please try another file.");
     } finally {
       setIsSubmitting(false);
     }
@@ -233,19 +310,32 @@ export default function SiteSettingsManager() {
     setSettings(prev => {
       if (!prev) return null;
       const currentReviews = prev.reviews || [];
+      let updated: GoogleReviewItem[] = [];
       if (editingIndex !== null) {
-        const updated = [...currentReviews];
+        updated = [...currentReviews];
         updated[editingIndex] = newReview;
-        return {
-          ...prev,
-          reviews: updated
-        };
       } else {
-        return {
-          ...prev,
-          reviews: [...currentReviews, newReview]
-        };
+        updated = [...currentReviews, newReview];
       }
+      
+      const sorted = sortReviewsByDate(updated);
+      const newSettings = {
+        ...prev,
+        reviews: sorted
+      };
+
+      // Auto-save to Firestore immediately so user does not need to click form submit at the bottom
+      settingsService.updateSettings(newSettings)
+        .then(() => {
+          setSuccess(true);
+          setTimeout(() => setSuccess(false), 3000);
+        })
+        .catch(err => {
+          console.error("Auto-save failed:", err);
+          setError("Failed to auto-save to database.");
+        });
+
+      return newSettings;
     });
 
     // Reset inputs
@@ -288,11 +378,26 @@ export default function SiteSettingsManager() {
       if (!prev) return null;
       const currentReviews = prev.reviews || [];
       const updated = currentReviews.filter((_, i) => i !== index);
-      return {
+      const sorted = sortReviewsByDate(updated);
+      const newSettings = {
         ...prev,
-        reviews: updated
+        reviews: sorted
       };
+
+      // Auto-save delete operation to Firestore immediately
+      settingsService.updateSettings(newSettings)
+        .then(() => {
+          setSuccess(true);
+          setTimeout(() => setSuccess(false), 3000);
+        })
+        .catch(err => {
+          console.error("Auto-delete failed:", err);
+          setError("Failed to auto-save deletion.");
+        });
+
+      return newSettings;
     });
+
     // If the review we were editing got deleted, cancel edit mode
     if (editingIndex === index) {
       handleCancelEditReview();
@@ -304,10 +409,24 @@ export default function SiteSettingsManager() {
   const handleLoadDefaultReviews = () => {
     setSettings(prev => {
       if (!prev) return null;
-      return {
+      const sorted = sortReviewsByDate([...defaultReviews]);
+      const newSettings = {
         ...prev,
-        reviews: [...defaultReviews]
+        reviews: sorted
       };
+
+      // Auto-save imported defaults to Firestore immediately
+      settingsService.updateSettings(newSettings)
+        .then(() => {
+          setSuccess(true);
+          setTimeout(() => setSuccess(false), 3000);
+        })
+        .catch(err => {
+          console.error("Auto-load failed:", err);
+          setError("Failed to auto-save imported defaults.");
+        });
+
+      return newSettings;
     });
     handleCancelEditReview();
   };
@@ -414,6 +533,92 @@ export default function SiteSettingsManager() {
                     <span className="text-xs text-white/40 italic">Default Text Light Brand</span>
                   )}
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* SECTION 1.5: German AI Tutor Mascot Settings */}
+        <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100">
+          <div className="flex items-center gap-4 mb-8">
+            <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary">
+              <span className="text-2xl">🤖</span>
+            </div>
+            <div>
+              <h2 className="text-xl font-black text-accent uppercase tracking-tight text-[#4B3FBF]">German AI Tutor Mascot Settings</h2>
+              <p className="text-sm text-gray-500 font-medium font-sans">Upload your custom AI Tutor Robot mascot image (e.g. your high-resolution waving robot holding the Language World Karachi logo badge).</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="space-y-6">
+              <div>
+                <label className="block text-xs font-black uppercase text-gray-400 tracking-widest mb-2 ml-4">Upload Mascot Image</label>
+                <div className="relative group/mascot-upload h-[140px]">
+                  <input 
+                    type="file"
+                    accept="image/*"
+                    onChange={handleMascotFileChange}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                  />
+                  <div className="h-full border-2 border-dashed border-gray-200 rounded-[2rem] flex flex-col items-center justify-center bg-soft-gray group-hover/mascot-upload:border-primary/40 transition-colors">
+                    <Upload className="text-gray-300 mb-2" size={24} />
+                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Click to upload Mascot image</span>
+                    <span className="text-[10px] font-bold text-gray-300 italic mt-1 font-sans">Supports PNG with transparency</span>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-black uppercase text-gray-400 tracking-widest mb-2 ml-4">Or use Mascot Image URL</label>
+                <input 
+                  type="url" 
+                  value={settings?.mascotImage?.startsWith('data:') ? '' : (settings?.mascotImage || '')}
+                  onChange={(e) => setSettings(prev => prev ? ({ ...prev, mascotImage: e.target.value }) : null)}
+                  className="w-full px-6 py-4 bg-soft-gray border-none rounded-2xl focus:ring-2 focus:ring-accent/20 font-bold text-accent"
+                  placeholder="https://example.com/mascot_robot.png"
+                />
+              </div>
+
+              {settings?.mascotImage && (
+                <button
+                  type="button"
+                  onClick={() => setSettings(prev => prev ? ({ ...prev, mascotImage: "" }) : null)}
+                  className="text-xs text-red-500 hover:text-red-700 font-black tracking-wider uppercase ml-4 flex items-center gap-1 cursor-pointer"
+                >
+                  <X size={12} /> Reset to Interactive vector SVG Mascot
+                </button>
+              )}
+            </div>
+
+            <div className="space-y-4">
+              <label className="block text-xs font-black uppercase text-gray-400 tracking-widest mb-2 ml-4 font-sans">Active Mascot Preview</label>
+              <div className="p-6 rounded-[2rem] border border-gray-100 bg-slate-950 flex flex-col items-center justify-center min-h-[220px] text-center shadow-inner relative overflow-hidden">
+                <span className="absolute top-4 left-4 text-[9px] font-black text-white/30 uppercase tracking-widest font-mono">Current Active Mascot</span>
+                
+                {settings?.mascotImage ? (
+                  <div className="relative group">
+                    <img 
+                      src={settings.mascotImage} 
+                      alt="Custom AI Tutor Mascot" 
+                      className="max-h-44 w-auto object-contain animate-float"
+                      referrerPolicy="no-referrer"
+                    />
+                    <span className="block text-[9px] text-emerald-400 font-black uppercase tracking-widest mt-2">Custom Image Active</span>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center">
+                    <svg viewBox="0 0 200 200" className="w-24 h-24 animate-float" style={{ animationDuration: "3s" }}>
+                      <rect x="58" y="54" width="84" height="70" rx="28" fill="#ffffff" stroke="#cbd1dc" strokeWidth="2" />
+                      <rect x="66" y="62" width="68" height="46" rx="18" fill="#1e293b" />
+                      <circle cx="85" cy="80" r="5" fill="#7BC043" />
+                      <circle cx="115" cy="80" r="5" fill="#7BC043" />
+                      <path d="M92 94 Q100 100 108 94" fill="none" stroke="#7BC043" strokeWidth="2.5" strokeLinecap="round" />
+                      <path d="M70 145 C70 125, 130 125, 130 145" fill="none" stroke="#cbd1dc" strokeWidth="2.5" />
+                    </svg>
+                    <span className="block text-[9px] text-primary font-black uppercase tracking-widest mt-2">Interactive SVG Vector Active</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>

@@ -24,6 +24,7 @@ export interface SiteSettings {
   heroTitle?: string;
   heroSubtitle?: string;
   logoImage?: string;
+  mascotImage?: string;
   reviews?: GoogleReviewItem[];
   popup?: SpecialPopupSettings;
 }

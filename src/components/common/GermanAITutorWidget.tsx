@@ -2,12 +2,21 @@ import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
 import { X, Sparkles } from "lucide-react";
+import { settingsService, SiteSettings } from "../../services/settingsService";
 
 export default function GermanAITutorWidget() {
   const location = useLocation();
   const [isVisible, setIsVisible] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
   const [showBubble, setShowBubble] = useState(false);
+  const [siteSettings, setSiteSettings] = useState<SiteSettings | null>(() => {
+    try {
+      const cached = localStorage.getItem("siteSettings");
+      return cached ? JSON.parse(cached) : null;
+    } catch {
+      return null;
+    }
+  });
 
   // Hide the floating widget on the tutor page itself or if dismissed
   const shouldShow = isVisible && !isDismissed && location.pathname !== "/german-tutor";
@@ -21,12 +30,20 @@ export default function GermanAITutorWidget() {
     // Show interactive speech bubble briefly after mounting
     const bubbleTimer = setTimeout(() => {
       setShowBubble(true);
-    }, 4000);
+    }, 4500);
 
     // Auto-dim/hide speech bubble after some seconds to prevent blocking content
     const bubbleHideTimer = setTimeout(() => {
       setShowBubble(false);
-    }, 9000);
+    }, 10000);
+
+    // Fetch siteSettings to get uploaded mascot image
+    settingsService.getSettings().then(data => {
+      if (data) {
+        setSiteSettings(data);
+        localStorage.setItem("siteSettings", JSON.stringify(data));
+      }
+    });
 
     return () => {
       clearTimeout(timer);
@@ -60,8 +77,8 @@ export default function GermanAITutorWidget() {
               <X size={10} />
             </button>
 
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1">
-              <Sparkles size={10} className="text-[#FFCE00] fill-[#FFCE00]" />
+            <span className="text-[10px] font-black text-[#7BC043] uppercase tracking-widest flex items-center gap-1">
+              <Sparkles size={10} className="text-[#7BC043] fill-[#7BC043]" />
               Pakistan's First German AI Tutor
             </span>
             <p className="text-xs font-bold text-slate-800 mt-1.5 leading-snug">
@@ -70,7 +87,7 @@ export default function GermanAITutorWidget() {
             <div className="mt-2.5 flex items-center justify-between">
               <Link
                 to="/german-tutor"
-                className="text-[10px] font-black text-[#FFCE00] bg-slate-900 border border-slate-950 px-2.5 py-1 rounded-lg hover:bg-slate-800 transition-colors uppercase tracking-wider"
+                className="text-[10px] font-black text-white bg-[#7BC043] hover:bg-[#69a338] px-2.5 py-1.5 rounded-lg transition-colors uppercase tracking-wider"
               >
                 Start Trial
               </Link>
@@ -100,7 +117,7 @@ export default function GermanAITutorWidget() {
         className="relative group pointer-events-auto"
       >
         {/* Hover / Glow visual backlight */}
-        <div className="absolute inset-x-2 -bottom-2 -top-1 bg-gradient-to-tr from-[#FFCE00]/30 to-primary/10 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+        <div className="absolute inset-x-2 -bottom-2 -top-1 bg-gradient-to-tr from-[#7BC043]/30 to-[#4B3FBF]/10 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
 
         {/* Dismiss entire widget button */}
         <button
@@ -116,143 +133,157 @@ export default function GermanAITutorWidget() {
         </button>
 
         {/* Floating Tag over Robot */}
-        <div className="absolute -top-8 left-2 whitespace-nowrap bg-slate-900/95 text-[9px] font-black tracking-widest uppercase text-[#FFCE00] px-3 py-1.5 rounded-full border border-slate-950 shadow-md">
+        <div className="absolute -top-8 left-2 whitespace-nowrap bg-[#4B3FBF] text-[9px] font-black tracking-widest uppercase text-white px-3 py-1.5 rounded-full border border-[#4B3FBF] shadow-md">
           Pakistan's First German AI Tutor 🤖
         </div>
 
         {/* Link packaging for Robot */}
         <Link
           to="/german-tutor"
-          className="relative block w-20 h-20 sm:w-22 sm:h-22 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#FFCE00] rounded-full"
+          className="relative block w-20 h-20 sm:w-22 sm:h-22 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#7BC043] rounded-full"
           title="Open Pakistan's First German AI Tutor"
           onMouseEnter={() => setShowBubble(true)}
         >
-          {/* Animated SVG Robot conforming to the friendly, sleek visual style uploaded */}
-          <svg
-            viewBox="0 0 200 200"
-            className="w-full h-full drop-shadow-2xl filter hover:drop-shadow-[0_15px_15px_rgba(255,206,0,0.3)] transition-all duration-300 animate-float"
-            style={{ animationDuration: "3.5s" }}
-          >
-            {/* Gradients */}
-            <defs>
-              <radialGradient id="robotBodyGrad" cx="50%" cy="40%" r="50%">
-                <stop offset="0%" stopColor="#ffffff" />
-                <stop offset="70%" stopColor="#f1f3f7" />
-                <stop offset="100%" stopColor="#d5dae2" />
-              </radialGradient>
-              <linearGradient id="screenGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#151d30" />
-                <stop offset="100%" stopColor="#0a0d14" />
-              </linearGradient>
-              <radialGradient id="eyeGlowGrad" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stopColor="#22d3ee" stopOpacity="1" />
-                <stop offset="50%" stopColor="#06b6d4" stopOpacity="0.8" />
-                <stop offset="100%" stopColor="#0891b2" stopOpacity="0" />
-              </radialGradient>
-              <linearGradient id="germanFlagYellow" x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0%" stopColor="#FFCE00" />
-                <stop offset="100%" stopColor="#D0A100" />
-              </linearGradient>
-            </defs>
-
-            {/* BACKGROUND COMPLEMENT/SHADOW */}
-            <ellipse cx="100" cy="180" rx="30" ry="6" fill="#000000" opacity="0.15" />
-
-            {/* ROBOT TORSO/BODY */}
-            <path
-              d="M60 140 C60 110, 140 110, 140 140 C140 168, 60 168, 60 140 Z"
-              fill="url(#robotBodyGrad)"
-              stroke="#cbd1dc"
-              strokeWidth="2.5"
+          {siteSettings?.mascotImage ? (
+            <img
+              src={siteSettings.mascotImage}
+              alt="Pakistan's First German AI Tutor"
+              className="w-full h-[85%] lg:h-full object-contain animate-float drop-shadow-xl mt-1.5"
+              style={{ animationDuration: "3.5s" }}
+              referrerPolicy="no-referrer"
             />
-            {/* Robot chest panel (German Flag Heart-pin) */}
-            <rect x="91" y="132" width="18" height="3" fill="#000000" />
-            <rect x="91" y="135" width="18" height="3" fill="#DD0000" />
-            <rect x="91" y="138" width="18" height="3" fill="#FFCE00" />
+          ) : (
+            <svg
+              viewBox="0 0 200 200"
+              className="w-full h-full drop-shadow-2xl filter hover:drop-shadow-[0_15px_15px_rgba(123,192,67,0.3)] transition-all duration-300 animate-float"
+              style={{ animationDuration: "3.5s" }}
+            >
+              {/* Gradients */}
+              <defs>
+                <radialGradient id="robotBodyGrad" cx="50%" cy="40%" r="50%">
+                  <stop offset="0%" stopColor="#ffffff" />
+                  <stop offset="70%" stopColor="#f1f3f7" />
+                  <stop offset="100%" stopColor="#d5dae2" />
+                </radialGradient>
+                <linearGradient id="screenGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#151d30" />
+                  <stop offset="100%" stopColor="#0a0d14" />
+                </linearGradient>
+                <radialGradient id="eyeGlowGrad" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="#22d3ee" stopOpacity="1" />
+                  <stop offset="50%" stopColor="#06b6d4" stopOpacity="0.8" />
+                  <stop offset="100%" stopColor="#0891b2" stopOpacity="0" />
+                </radialGradient>
+              </defs>
 
-            {/* ROBOT LIMBS / ARM JOINTED ARCS */}
-            {/* Left Arm */}
-            <path
-              d="M62 125 C45 130, 42 155, 52 165 C55 168, 59 160, 56 154"
-              fill="none"
-              stroke="#d5dae2"
-              strokeWidth="11"
-              strokeLinecap="round"
-            />
-            {/* Right Arm */}
-            <path
-              d="M138 125 C155 130, 158 155, 148 165 C145 168, 141 160, 144 154"
-              fill="none"
-              stroke="#d5dae2"
-              strokeWidth="11"
-              strokeLinecap="round"
-            />
+              {/* BACKGROUND COMPLEMENT/SHADOW */}
+              <ellipse cx="100" cy="180" rx="30" ry="6" fill="#000000" opacity="0.15" />
 
-            {/* ROBOT HEAD / HELMET */}
-            <rect
-              x="38"
-              y="34"
-              width="124"
-              height="90"
-              rx="42"
-              fill="url(#robotBodyGrad)"
-              stroke="#cbd1dc"
-              strokeWidth="3"
-            />
+              {/* ROBOT TORSO/BODY */}
+              <path
+                d="M60 140 C60 110, 140 110, 140 140 C140 168, 60 168, 60 140 Z"
+                fill="url(#robotBodyGrad)"
+                stroke="#cbd1dc"
+                strokeWidth="2.5"
+              />
+              {/* Robot chest panel (Language World Globe Logo Badge) */}
+              <circle cx="100" cy="143" r="16" fill="#ffffff" stroke="#cbd1dc" strokeWidth="1.5" />
+              <image href="/globe-logo.svg" x="87" y="130" width="26" height="26" />
 
-            {/* HEADPHONES / EAR CAPS (Matches uploaded picture) */}
-            <rect x="25" y="60" width="14" height="38" rx="6" fill="#c3cad6" />
-            <rect x="161" y="60" width="14" height="38" rx="6" fill="#c3cad6" />
+              {/* ROBOT LIMBS / ARM JOINTED ARCS */}
+              {/* Left Arm (Waving Up gracefully) */}
+              <g id="waving-arm-group">
+                <circle cx="62" cy="128" r="8" fill="#1e293b" />
+                <path
+                  d="M62 128 C48 115, 36 96, 40 76"
+                  fill="none"
+                  stroke="#d5dae2"
+                  strokeWidth="11"
+                  strokeLinecap="round"
+                />
+                <circle cx="40" cy="72" r="9" fill="#27272a" />
+                <path
+                  d="M40 66 L40 56 M44 68 L47 58 M36 68 L33 58 M46 70 L52 63"
+                  stroke="#27272a"
+                  strokeWidth="4.5"
+                  strokeLinecap="round"
+                />
+              </g>
+              {/* Right Arm */}
+              <path
+                d="M138 125 C155 130, 158 155, 148 165 C145 168, 141 160, 144 154"
+                fill="none"
+                stroke="#d5dae2"
+                strokeWidth="11"
+                strokeLinecap="round"
+              />
 
-            {/* ANTENNA TOP HIGHLIGHT */}
-            <ellipse cx="100" cy="34" rx="20" ry="5" fill="#a4afbf" />
-            <rect x="98" y="24" width="4" height="10" fill="#a4afbf" />
-            <circle cx="100" cy="20" r="5" fill="#22d3ee" className="animate-pulse" />
+              {/* ROBOT HEAD / HELMET */}
+              <rect
+                x="38"
+                y="34"
+                width="124"
+                height="90"
+                rx="42"
+                fill="url(#robotBodyGrad)"
+                stroke="#cbd1dc"
+                strokeWidth="3"
+              />
 
-            {/* ROBOT FACE SCREEN */}
-            <rect
-              x="48"
-              y="44"
-              width="104"
-              height="70"
-              rx="28"
-              fill="url(#screenGrad)"
-              stroke="#334155"
-              strokeWidth="2"
-            />
+              {/* HEADPHONES / EAR CAPS (Matches uploaded picture) */}
+              <rect x="25" y="60" width="14" height="38" rx="6" fill="#c3cad6" />
+              <rect x="161" y="60" width="14" height="38" rx="6" fill="#c3cad6" />
 
-            {/* DIGITAL EMBELLISHED EYES (Happy curved status style from user's image) */}
-            {/* Left Eye Goggles Glow background */}
-            <ellipse cx="75" cy="76" rx="14" ry="14" fill="url(#eyeGlowGrad)" opacity="0.65" />
-            {/* Curved Happy Left Eye */}
-            <path
-              d="M65 78 C65 67, 85 67, 85 78"
-              fill="none"
-              stroke="#22d3ee"
-              strokeWidth="4.5"
-              strokeLinecap="round"
-            />
+              {/* ANTENNA TOP HIGHLIGHT */}
+              <ellipse cx="100" cy="34" rx="20" ry="5" fill="#a4afbf" />
+              <rect x="98" y="24" width="4" height="10" fill="#a4afbf" />
+              <circle cx="100" cy="20" r="5" fill="#22d3ee" className="animate-pulse" />
 
-            {/* Right Eye Goggles Glow background */}
-            <ellipse cx="125" cy="76" rx="14" ry="14" fill="url(#eyeGlowGrad)" opacity="0.65" />
-            {/* Curved Happy Right Eye */}
-            <path
-              d="M115 78 C115 67, 135 67, 135 78"
-              fill="none"
-              stroke="#22d3ee"
-              strokeWidth="4.5"
-              strokeLinecap="round"
-            />
+              {/* ROBOT FACE SCREEN */}
+              <rect
+                x="48"
+                y="44"
+                width="104"
+                height="70"
+                rx="28"
+                fill="url(#screenGrad)"
+                stroke="#334155"
+                strokeWidth="2"
+              />
 
-            {/* GLOWING DIGITAL SMILE (Matching the friendly cyber-robot tutor) */}
-            <path
-              d="M93 92 Q100 99 107 92"
-              fill="none"
-              stroke="#22d3ee"
-              strokeWidth="4"
-              strokeLinecap="round"
-            />
-          </svg>
+              {/* DIGITAL EMBELLISHED EYES (Happy curved status style from user's image) */}
+              {/* Left Eye Goggles Glow background */}
+              <ellipse cx="75" cy="76" rx="14" ry="14" fill="url(#eyeGlowGrad)" opacity="0.65" />
+              {/* Curved Happy Left Eye */}
+              <path
+                d="M65 78 C65 67, 85 67, 85 78"
+                fill="none"
+                stroke="#22d3ee"
+                strokeWidth="4.5"
+                strokeLinecap="round"
+              />
+
+              {/* Right Eye Goggles Glow background */}
+              <ellipse cx="125" cy="76" rx="14" ry="14" fill="url(#eyeGlowGrad)" opacity="0.65" />
+              {/* Curved Happy Right Eye */}
+              <path
+                d="M115 78 C115 67, 135 67, 135 78"
+                fill="none"
+                stroke="#22d3ee"
+                strokeWidth="4.5"
+                strokeLinecap="round"
+              />
+
+              {/* GLOWING DIGITAL SMILE (Matching the friendly cyber-robot tutor) */}
+              <path
+                d="M93 92 Q100 99 107 92"
+                fill="none"
+                stroke="#22d3ee"
+                strokeWidth="4"
+                strokeLinecap="round"
+              />
+            </svg>
+          )}
 
           {/* Glowing Status Indicator to show active ready-to-chat status */}
           <div className="absolute bottom-1.5 right-1.5 w-4.5 h-4.5 rounded-full bg-emerald-500 border-2 border-white flex items-center justify-center shadow-lg z-10" title="German Tutor Online & Ready">

@@ -13,12 +13,29 @@ export default function BlogDetailPage() {
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const [nativeShareSupported, setNativeShareSupported] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
 
   useEffect(() => {
     if (navigator.share) {
       setNativeShareSupported(true);
     }
   }, []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+      if (scrollHeight > 0) {
+        setScrollProgress((window.scrollY / scrollHeight) * 100);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, [blog, loading]);
 
   const handleCopyLink = async () => {
     try {
@@ -133,6 +150,18 @@ export default function BlogDetailPage() {
         description={cleanMetaDescription} 
         keywords={cleanKeywords}
       />
+
+      {/* Elegant Real-Time Scroll Progress Indicator */}
+      <div className="fixed top-0 left-0 w-full h-[5px] z-[9999] pointer-events-none origin-left">
+        <div 
+          className="h-full bg-gradient-to-r from-primary via-accent-light to-accent transition-all duration-75 ease-out relative shadow-[0_1px_10px_rgba(75,63,191,0.4)]"
+          style={{ width: `${scrollProgress}%` }}
+        >
+          {scrollProgress > 0 && (
+            <span className="absolute right-0 top-0 bottom-0 w-6 bg-white/60 blur-[3px] animate-pulse" />
+          )}
+        </div>
+      </div>
 
       {/* Hero Section */}
       <section className="relative h-[60vh] min-h-[400px] overflow-hidden bg-accent">
